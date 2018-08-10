@@ -1,0 +1,29 @@
+:microprofile-lra: https://github.com/eclipse/microprofile-lra/
+:smallrye: https://github.com/smallrye
+
+= SmallRye LRA
+
+**DISCLAIMER: This is only a proof of concept implementation of the proposed Eclipse LRA specification. It is not a part of the {smallrye}[SmallRye] project.**
+
+SmallRye LRA is an implementation of {microprofile-lra}[Eclipse MicroProfile LRA (Long Running Actions)].
+
+== Instructions
+
+Compile and install this project:
+
+[source,bash]
+----
+mvn clean install
+----
+
+=== Project structure
+
+* link:implementation[] - Implementation of the Eclipse MicroProfile LRA API.
+* link:tck[] - Test suite to run the implementation against the Eclipse MicroProfile LRA TCK.
+* link:docs[] - Project documentation.
+
+=== Links
+
+* http://github.com/xstefank/smallrye-lra/[Project Homepage]
+* {microprofile-lra}[Eclipse MicroProfile LRA]
+

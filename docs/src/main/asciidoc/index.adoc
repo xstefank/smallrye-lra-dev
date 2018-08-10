@@ -1,0 +1,10 @@
+[[index]]
+= SmallRye LRA Documentation
+
+TODO
+
+[[more-resources]]
+== More Resources
+
+* https://github.com/xstefank/smallrye-lra/[GitHub project repository]
+* https://github.com/eclipse/microprofile-lra/[Eclipse MicroProfile LRA]
