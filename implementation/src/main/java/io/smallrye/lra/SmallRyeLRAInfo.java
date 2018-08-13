@@ -26,7 +26,7 @@ import org.eclipse.microprofile.lra.client.LRAInfo;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-public class LRAInfoImpl implements LRAInfo {
+public class SmallRyeLRAInfo implements LRAInfo {
     private String lraId;
     private String clientId;
     private String status;
@@ -38,10 +38,10 @@ public class LRAInfoImpl implements LRAInfo {
     private long startTime;
     private long finishTime;
 
-    public LRAInfoImpl(String lraId, String clientId, String status,
-                       boolean isComplete, boolean isCompensated, boolean isRecovering,
-                       boolean isActive, boolean isTopLevel,
-                       long startTime, long finishTime) {
+    public SmallRyeLRAInfo(String lraId, String clientId, String status,
+                           boolean isComplete, boolean isCompensated, boolean isRecovering,
+                           boolean isActive, boolean isTopLevel,
+                           long startTime, long finishTime) {
         this.lraId = lraId;
         this.clientId = clientId;
         this.status = status;
@@ -116,7 +116,7 @@ public class LRAInfoImpl implements LRAInfo {
 
     @Override
     public String toString() {
-        return "LRAInfoImpl{" +
+        return "SmallRyeLRAInfo{" +
                 "lraId='" + lraId + '\'' +
                 ", clientId='" + clientId + '\'' +
                 ", status='" + status + '\'' +
