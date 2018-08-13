@@ -51,8 +51,7 @@
   <modules>
     <module>docs</module>
     <module>implementation</module>
-    <!--TODO https://github.com/xstefank/microprofile-lra/blob/master/tck/running_the_tck.asciidoc-->
-    <!--<module>tck</module>-->
+    <module>tck</module>
   </modules>
 
   <dependencyManagement>
