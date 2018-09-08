@@ -79,7 +79,6 @@
         <version>${version.org.jboss.spec.javax.json}</version>
       </dependency>
 
-      <!--TODO possibly remove?-->
       <!-- jboss logging -->
       <dependency>
         <groupId>org.jboss.logging</groupId>
