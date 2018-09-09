@@ -10,8 +10,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static io.smallrye.lra.utils.LRAConstants.CANCEL;
-import static io.smallrye.lra.utils.LRAConstants.CLOSE;
 import static io.smallrye.lra.utils.LRAConstants.LRA_ID_PATH_PARAM;
 
 @Path("/lra-coordinator")
@@ -20,9 +18,9 @@ public interface LRACoordinatorRESTClient {
     @POST
     @Path("/start")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    Response startLRA(@QueryParam("ClientId") @DefaultValue("") String clientID,
-                      @QueryParam("TimeLimit") @DefaultValue("0") Long timelimit,
-                      @QueryParam("ParentLRA") @DefaultValue("") String parentLRA);
+    Response startLRA(@QueryParam("ParentLRA") @DefaultValue("") String parentLRA,
+                      @QueryParam("ClientId") @DefaultValue("") String clientID,
+                      @QueryParam("TimeLimit") @DefaultValue("0") Long timelimit);
 
     @PUT
     @Path("/{" + LRA_ID_PATH_PARAM + "}/close")

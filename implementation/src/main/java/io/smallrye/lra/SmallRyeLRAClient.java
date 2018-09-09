@@ -8,10 +8,13 @@ import org.eclipse.microprofile.lra.client.LRAInfo;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -45,32 +48,58 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
         
         try {
-            response = coordinatorRESTClient.startLRA(clientID, unit.toMillis(timeout), Utils.extractLraId(parentLRA));
+            response = coordinatorRESTClient.startLRA(parentLRA != null ? Utils.extractLraId(parentLRA) : null, 
+                    clientID, unit.toMillis(timeout));
+
+            if (parentLRA != null && response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+                throw new NotFoundException("Unable to start nested LRA for parent: " + parentLRA);
+            }
 
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
                 throw new GenericLRAException(null, response.getStatus(),
-                        "Unable to start LRA for " + Utils.getFormattedString(parentLRA, clientID, timeout, unit), null);
+                        "Unexpected return code of LRA start for" + Utils.getFormattedString(parentLRA, clientID, timeout, unit), null);
             }
+
+            return new URL(response.readEntity(String.class));
+            
+        } catch (MalformedURLException e) {
+            throw new GenericLRAException(null, response.getStatus(),
+                    "Unable to start LRA for " + Utils.getFormattedString(parentLRA, clientID, timeout, unit), e);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
+        }
+    }
+
+    @Override
+    public URL startLRA(String clientID, Long timeout, TimeUnit unit) throws GenericLRAException {
+        return startLRA(null, clientID, timeout, unit);
+    }
+
+    @Override
+    public String cancelLRA(URL lraId) throws GenericLRAException {
+        Objects.requireNonNull(lraId);
+        Response response = null;
+        
+        try {
+            response = coordinatorRESTClient.cancelLRA(Utils.extractLraId(lraId));
+
+            if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+                throw new NotFoundException("Unable to find LRA: " + lraId);
+            }
+
+            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+                throw new GenericLRAException(lraId, response.getStatus(), "Unexpected return code for LRA compensation", null);
+            }
+
+            return response.readEntity(String.class);
             
         } finally {
             if (response != null) {
                 response.close();
             }
         }
-        
-        
-
-        return null;
-    }
-
-    @Override
-    public URL startLRA(String clientID, Long timeout, TimeUnit unit) throws GenericLRAException {
-        return null;
-    }
-
-    @Override
-    public String cancelLRA(URL lraId) throws GenericLRAException {
-        return null;
     }
 
     @Override
