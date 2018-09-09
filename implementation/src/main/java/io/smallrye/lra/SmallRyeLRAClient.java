@@ -1,5 +1,6 @@
 package io.smallrye.lra;
 
+import io.smallrye.lra.utils.LRAStatus;
 import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
@@ -9,6 +10,8 @@ import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -55,7 +58,7 @@ public class SmallRyeLRAClient implements LRAClient {
                 throw new NotFoundException("Unable to start nested LRA for parent: " + parentLRA);
             }
 
-            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+            if (isInvalidResponse(response)) {
                 throw new GenericLRAException(null, response.getStatus(),
                         "Unexpected return code of LRA start for" + Utils.getFormattedString(parentLRA, clientID, timeout, unit), null);
             }
@@ -79,22 +82,33 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public String cancelLRA(URL lraId) throws GenericLRAException {
+        return endLRA(lraId, false);
+    }
+
+    @Override
+    public String closeLRA(URL lraId) throws GenericLRAException {
+        return endLRA(lraId, true);
+    }
+
+    private String endLRA(URL lraId, boolean confirm) {
         Objects.requireNonNull(lraId);
         Response response = null;
-        
+
         try {
-            response = coordinatorRESTClient.cancelLRA(Utils.extractLraId(lraId));
+            response = confirm ? coordinatorRESTClient.closeLRA(Utils.extractLraId(lraId)) : 
+                                 coordinatorRESTClient.cancelLRA(Utils.extractLraId(lraId));
 
             if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
                 throw new NotFoundException("Unable to find LRA: " + lraId);
             }
 
-            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-                throw new GenericLRAException(lraId, response.getStatus(), "Unexpected return code for LRA compensation", null);
+            if (isInvalidResponse(response)) {
+                throw new GenericLRAException(lraId, response.getStatus(), "Unexpected returned status code for LRA " 
+                        + (confirm ? "confirmation" : "compensation"), null);
             }
 
             return response.readEntity(String.class);
-            
+
         } finally {
             if (response != null) {
                 response.close();
@@ -103,23 +117,38 @@ public class SmallRyeLRAClient implements LRAClient {
     }
 
     @Override
-    public String closeLRA(URL lraId) throws GenericLRAException {
-        return null;
-    }
-
-    @Override
     public List<LRAInfo> getActiveLRAs() throws GenericLRAException {
-        return null;
+        return getLRAs(LRAStatus.ACTIVE);
     }
 
     @Override
     public List<LRAInfo> getAllLRAs() throws GenericLRAException {
-        return null;
+        return getLRAs(null);
     }
 
     @Override
     public List<LRAInfo> getRecoveringLRAs() throws GenericLRAException {
-        return null;
+        return getLRAs(LRAStatus.RECOVERING);
+    }
+
+    private List<LRAInfo> getLRAs(LRAStatus status) {
+        Response response = null;
+
+        try {
+            response = status == null ? coordinatorRESTClient.getAllLRAs() : coordinatorRESTClient.getAllLRAs(status);
+
+            if (isInvalidResponse(response)) {
+                throw new GenericLRAException(null, response.getStatus(),
+                        String.format("Unable to get %s LRAs", status == null ? "all" : status), null);
+            }
+
+            return response.readEntity(new GenericType<List<LRAInfo>>() {});
+        } catch (ProcessingException e) {
+            throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
+                    String.format("Invalid content received for %s LRAs", status == null ? "all" : status), e);
+        } finally {
+            if (response != null) response.close();
+        }
     }
 
     @Override
@@ -175,5 +204,9 @@ public class SmallRyeLRAClient implements LRAClient {
     @Override
     public void setCurrentLRA(URL lraId) {
 
+    }
+
+    private boolean isInvalidResponse(Response response) {
+        return response.getStatus() != Response.Status.OK.getStatusCode();
     }
 }

@@ -10,6 +10,7 @@ public final class LRAConstants {
     public static final String TIMELIMIT_PARAM = "TimeLimit";
     public static final String PARENT_LRA_PARAM = "ParentLRA";
     public static final String LRA_ID_PATH_PARAM = "LraId";
+    public static final String STATUS = "status";
     
     public static final String START = "/start";
     public static final String CLOSE = String.format("/{%s}/close", LRA_ID_PATH_PARAM);
