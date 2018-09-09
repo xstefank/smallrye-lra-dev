@@ -1,7 +1,5 @@
 package io.smallrye.lra;
 
-import io.smallrye.lra.utils.LRAStatus;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -15,6 +13,7 @@ import javax.ws.rs.core.Response;
 
 import static io.smallrye.lra.utils.LRAConstants.LRA_ID_PATH_PARAM;
 import static io.smallrye.lra.utils.LRAConstants.STATUS;
+import static io.smallrye.lra.utils.LRAConstants.TIMELIMIT;
 
 @Path("/lra-coordinator")
 public interface LRACoordinatorRESTClient {
@@ -24,7 +23,7 @@ public interface LRACoordinatorRESTClient {
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
     Response startLRA(@QueryParam("ParentLRA") @DefaultValue("") String parentLRA,
                       @QueryParam("ClientId") @DefaultValue("") String clientID,
-                      @QueryParam("TimeLimit") @DefaultValue("0") Long timelimit);
+                      @QueryParam(TIMELIMIT) @DefaultValue("0") Long timelimit);
 
     @GET
     @Path("/")
@@ -50,4 +49,11 @@ public interface LRACoordinatorRESTClient {
     @Path("/{" + LRA_ID_PATH_PARAM + "}")
     @Produces(MediaType.APPLICATION_JSON)
     Response getLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId);
+
+    @PUT
+    @Path("/{" + LRA_ID_PATH_PARAM + "}/join")
+    @Produces(MediaType.APPLICATION_JSON)
+    Response joinLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId, 
+                     @QueryParam(TIMELIMIT) @DefaultValue("0") Long timelimit,
+                     ParticipantDefinition participant);
 }

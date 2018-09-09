@@ -1,4 +1,4 @@
-package io.smallrye.lra.utils;
+package io.smallrye.lra;
 
 public enum LRAStatus {
 

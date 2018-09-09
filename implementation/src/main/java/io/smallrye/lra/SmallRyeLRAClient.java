@@ -1,6 +1,5 @@
 package io.smallrye.lra;
 
-import io.smallrye.lra.utils.LRAStatus;
 import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
@@ -193,12 +192,40 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public String joinLRA(URL lraId, Long timelimit, URL compensateUrl, URL completeUrl, URL forgetUrl, URL leaveUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
-        return null;
+        Objects.requireNonNull(lraId);
+        Response response = null;
+        
+        try {
+            response = coordinatorRESTClient.joinLRA(Utils.extractLraId(lraId), timelimit,
+                    new ParticipantDefinition(completeUrl, compensateUrl, forgetUrl,
+                            leaveUrl, statusUrl, compensatorData));
+
+            if (isInvalidResponse(response)) {
+                throw new GenericLRAException(lraId, response.getStatus(), "Unable to join LRA", null);
+            }
+
+            return response.readEntity(String.class);
+        } finally {
+            if (response != null) response.close();
+        }
     }
 
     @Override
     public String joinLRA(URL lraId, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
-        return null;
+        LRAParticipantResourceClass participantResourceClass = null;
+
+        try {
+            participantResourceClass = new LRAParticipantResourceClass(resourceClass);
+            return joinLRA(lraId, 0L, 
+                    participantResourceClass.getCompensateURL(baseUri),
+                    participantResourceClass.getCompleteURL(baseUri),
+                    participantResourceClass.getForgetURL(baseUri),
+                    participantResourceClass.getLeaveURL(baseUri),
+                    participantResourceClass.getStatusURL(baseUri),
+                    compensatorData);
+        } catch (IllegalArgumentException | MalformedURLException e) {
+            throw new GenericLRAException(lraId, -1, e.getMessage(), e);
+        } 
     }
 
     @Override
