@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -153,22 +154,41 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public Optional<CompensatorStatus> getStatus(URL lraId) throws GenericLRAException {
-        return Optional.empty();
+        Objects.requireNonNull(lraId);
+        Response response = null;
+
+        try {
+            response = coordinatorRESTClient.getLRA(Utils.extractLraId(lraId));
+
+            if (isInvalidResponse(response)) {
+                throw new GenericLRAException(lraId, response.getStatus(), "Unable to get LRA status", null);
+            }
+
+            return Optional.of(response.readEntity(CompensatorStatus.class));
+        } catch (ProcessingException e) {
+            return Optional.empty();
+        } finally {
+            if (response != null) response.close();
+        }
     }
 
     @Override
     public Boolean isActiveLRA(URL lraId) throws GenericLRAException {
-        return null;
+        return isCompensatorStatusIn(getStatus(lraId).orElseGet(() -> null), CompensatorStatus.Completing, CompensatorStatus.Compensating);
+    }
+
+    private Boolean isCompensatorStatusIn(CompensatorStatus actual, CompensatorStatus... expected) {
+        return Arrays.stream(expected).anyMatch(i -> Objects.equals(i, actual));
     }
 
     @Override
     public Boolean isCompensatedLRA(URL lraId) throws GenericLRAException {
-        return null;
+        return getStatus(lraId).orElseGet(() -> null) == CompensatorStatus.Compensated;
     }
 
     @Override
     public Boolean isCompletedLRA(URL lraId) throws GenericLRAException {
-        return null;
+        return getStatus(lraId).orElseGet(() -> null) == CompensatorStatus.Completed;
     }
 
     @Override

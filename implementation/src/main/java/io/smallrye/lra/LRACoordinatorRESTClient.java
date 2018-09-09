@@ -26,16 +26,6 @@ public interface LRACoordinatorRESTClient {
                       @QueryParam("ClientId") @DefaultValue("") String clientID,
                       @QueryParam("TimeLimit") @DefaultValue("0") Long timelimit);
 
-    @PUT
-    @Path("/{" + LRA_ID_PATH_PARAM + "}/close")
-    @Produces(MediaType.APPLICATION_JSON)
-    Response closeLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId);
-
-    @PUT
-    @Path("/{" + LRA_ID_PATH_PARAM + "}/cancel")
-    @Produces(MediaType.APPLICATION_JSON)
-    Response cancelLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId);
-    
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
@@ -45,4 +35,19 @@ public interface LRACoordinatorRESTClient {
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
     Response getAllLRAs(@QueryParam(STATUS) LRAStatus status);
+
+    @PUT
+    @Path("/{" + LRA_ID_PATH_PARAM + "}/close")
+    @Produces(MediaType.APPLICATION_JSON)
+    Response closeLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId);
+
+    @PUT
+    @Path("/{" + LRA_ID_PATH_PARAM + "}/cancel")
+    @Produces(MediaType.APPLICATION_JSON)
+    Response cancelLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId);
+
+    @GET
+    @Path("/{" + LRA_ID_PATH_PARAM + "}")
+    @Produces(MediaType.APPLICATION_JSON)
+    Response getLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId);
 }
