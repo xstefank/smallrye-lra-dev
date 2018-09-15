@@ -10,7 +10,11 @@ import org.jboss.logging.Logger;
 import javax.inject.Inject;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -212,10 +216,8 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public String joinLRA(URL lraId, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
-        LRAParticipantResourceClass participantResourceClass = null;
-
         try {
-            participantResourceClass = new LRAParticipantResourceClass(resourceClass);
+            LRAParticipantResourceClass participantResourceClass = new LRAParticipantResourceClass(resourceClass);
             return joinLRA(lraId, 0L, 
                     participantResourceClass.getCompensateURL(baseUri),
                     participantResourceClass.getCompleteURL(baseUri),
@@ -230,12 +232,29 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public URL updateCompensator(URL recoveryUrl, URL compensateUrl, URL completeUrl, URL forgetUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
-        return null;
+        Objects.requireNonNull(recoveryUrl);
+        Response response = null;
+        
+        try {
+            response = buildCompensatorRequest(recoveryUrl)
+                    .put(Entity.json(new ParticipantDefinition(completeUrl, compensateUrl, forgetUrl,
+                            null, statusUrl, compensatorData)));
+
+            if (isInvalidResponse(response)) {
+                throw new GenericLRAException(recoveryUrl, response.getStatus(), "Unable to update LRA participant", null);
+            }
+            
+            return new URL(response.readEntity(String.class));
+        } catch (MalformedURLException e) {
+            throw new GenericLRAException(recoveryUrl, response.getStatus(), "Invalid response for participant update", e);
+        } finally {
+            if (response != null) response.close();
+        }
     }
 
     @Override
     public void leaveLRA(URL lraId, String body) throws GenericLRAException {
-
+        //TODO 
     }
 
     @Override
@@ -251,6 +270,12 @@ public class SmallRyeLRAClient implements LRAClient {
     @Override
     public void setCurrentLRA(URL lraId) {
 
+    }
+
+    private Invocation.Builder buildCompensatorRequest(URL recoveryUrl) {
+        return ClientBuilder.newClient()
+                .target(recoveryUrl.toString())
+                .request(MediaType.TEXT_PLAIN);
     }
 
     private boolean isInvalidResponse(Response response) {

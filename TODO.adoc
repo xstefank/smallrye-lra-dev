@@ -2,3 +2,7 @@
 
 - remove logging?
 - TCK
+- remove setters from client
+- updateCompensator - recoveryUrl - why needs to be url?
+    - missing leaveUrl!
+- leaveLRA - missing participant identification (recoveryurl)
