@@ -254,7 +254,7 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public void leaveLRA(URL lraId, String body) throws GenericLRAException {
-        //TODO 
+        //TODO should there be a recovery URL instead of lraId?
     }
 
     @Override
