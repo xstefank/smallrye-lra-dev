@@ -259,7 +259,18 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public void renewTimeLimit(URL lraId, long limit, TimeUnit unit) {
+        Objects.requireNonNull(lraId);
+        Response response = null;
+        
+        try {
+            response = coordinatorRESTClient.renewTimeLimit(Utils.extractLraId(lraId), unit.toMillis(limit));
 
+            if (isInvalidResponse(response)) {
+                throw new GenericLRAException(lraId, response.getStatus(), "Unable to renew timelimit", null);
+            }
+        } finally {
+            if (response != null) response.close();
+        }
     }
 
     @Override

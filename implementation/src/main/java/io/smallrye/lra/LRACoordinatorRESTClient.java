@@ -56,4 +56,9 @@ public interface LRACoordinatorRESTClient {
     Response joinLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId, 
                      @QueryParam(TIMELIMIT) @DefaultValue("0") Long timelimit,
                      ParticipantDefinition participant);
+    
+    @PUT
+    @Path("/{" + LRA_ID_PATH_PARAM + "}/timelimit")
+    @Produces(MediaType.APPLICATION_JSON)
+    Response renewTimeLimit(@PathParam(LRA_ID_PATH_PARAM) String lraId, @QueryParam(TIMELIMIT) @DefaultValue("0") Long timelimit);
 }
