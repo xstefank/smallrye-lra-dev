@@ -6,3 +6,4 @@
 - updateCompensator - recoveryUrl - why needs to be url?
     - missing leaveUrl!
 - leaveLRA - missing participant identification (recoveryurl)
+- is every impl required to associated LRA with a thread (last 2 methods in client API)
