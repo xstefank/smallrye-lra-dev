@@ -277,12 +277,7 @@ public class SmallRyeLRAClient implements LRAClient {
     public URL getCurrent() {
         return null;
     }
-
-    @Override
-    public void setCurrentLRA(URL lraId) {
-
-    }
-
+    
     private Invocation.Builder buildCompensatorRequest(URL recoveryUrl) {
         return ClientBuilder.newClient()
                 .target(recoveryUrl.toString())
