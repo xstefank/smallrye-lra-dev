@@ -1,5 +1,6 @@
 package io.smallrye.lra;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -12,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import static io.smallrye.lra.utils.LRAConstants.LRA_ID_PATH_PARAM;
+import static io.smallrye.lra.utils.LRAConstants.RECOVERY_ID_PATH_NAME;
 import static io.smallrye.lra.utils.LRAConstants.STATUS;
 import static io.smallrye.lra.utils.LRAConstants.TIMELIMIT;
 
@@ -56,6 +58,11 @@ public interface LRACoordinatorRESTClient {
     Response joinLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId, 
                      @QueryParam(TIMELIMIT) @DefaultValue("0") Long timelimit,
                      ParticipantDefinition participant);
+    
+    @DELETE
+    @Path("/{" + LRA_ID_PATH_PARAM + "}/{" + RECOVERY_ID_PATH_NAME + "}")
+    @Produces(MediaType.APPLICATION_JSON)
+    Response leaveLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId, @PathParam(RECOVERY_ID_PATH_NAME) String recoveryId);
     
     @PUT
     @Path("/{" + LRA_ID_PATH_PARAM + "}/timelimit")

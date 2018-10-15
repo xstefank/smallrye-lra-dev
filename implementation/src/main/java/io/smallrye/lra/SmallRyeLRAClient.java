@@ -254,7 +254,19 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public void leaveLRA(URL lraId, String body) throws GenericLRAException {
-        //TODO should there be a recovery URL instead of lraId?
+        Objects.requireNonNull(lraId);
+        Objects.requireNonNull(body);
+        Response response = null;
+        
+        try {
+            response = coordinatorRESTClient.leaveLRA(Utils.extractLraId(lraId), body);
+
+            if (isInvalidResponse(response)) {
+                throw new GenericLRAException(lraId, response.getStatus(), "Participant " + body + "is cannotleave LRA", null);
+            }
+        } finally {
+            if (response != null) response.close();
+        }
     }
 
     @Override
@@ -275,6 +287,7 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public URL getCurrent() {
+        //TODO programatic API
         return null;
     }
     
