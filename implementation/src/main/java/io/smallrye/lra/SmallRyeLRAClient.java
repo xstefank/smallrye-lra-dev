@@ -5,6 +5,7 @@ import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
 import org.eclipse.microprofile.lra.client.LRAClient;
 import org.eclipse.microprofile.lra.client.LRAInfo;
+import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -31,20 +32,19 @@ public class SmallRyeLRAClient implements LRAClient {
 
     private static final Logger log = Logger.getLogger(SmallRyeLRAClient.class);
     
-    private URI coordinatorURI;
-    private URI recoveryCoordinatorURI;
-    
-    @Inject
+//    @Inject
     private LRACoordinatorRESTClient coordinatorRESTClient;
     
     @Override
     public void setCoordinatorURI(URI uri) {
-        this.coordinatorURI = uri;
+        coordinatorRESTClient = RestClientBuilder.newBuilder()
+                .baseUri(uri)
+                .build(LRACoordinatorRESTClient.class);
     }
 
     @Override
     public void setRecoveryCoordinatorURI(URI uri) {
-        this.recoveryCoordinatorURI = uri;
+        //no-op
     }
 
     @Override

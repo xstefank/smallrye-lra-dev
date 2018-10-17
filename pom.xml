@@ -67,7 +67,14 @@
         <artifactId>microprofile-lra-tck</artifactId>
         <version>${version.eclipse.microprofile.lra}</version>
       </dependency>
-    
+
+      <dependency>
+        <groupId>org.eclipse.microprofile.rest.client</groupId>
+        <artifactId>microprofile-rest-client-api</artifactId>
+        <version>${version.eclipse.microprofile.rest-client}</version>
+      </dependency>
+
+
       <dependency>
         <groupId>javax.ws.rs</groupId>
         <artifactId>javax.ws.rs-api</artifactId>
@@ -78,12 +85,6 @@
         <groupId>org.jboss.spec.javax.json</groupId>
         <artifactId>jboss-json-api_1.0_spec</artifactId>
         <version>${version.org.jboss.spec.javax.json}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.eclipse.microprofile.</groupId>
-        <artifactId>microprofile-rest-client-api</artifactId>
-        <version>${version.eclipse.microprofile.rest-client}</version>
       </dependency>
 
       <!-- jboss logging -->
