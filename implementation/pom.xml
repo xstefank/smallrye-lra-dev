@@ -41,6 +41,14 @@
       <artifactId>microprofile-rest-client-api</artifactId>
     </dependency>
 
+    <!-- https://mvnrepository.com/artifact/io.thorntail/microprofile-restclient -->
+    <dependency>
+      <groupId>io.thorntail</groupId>
+      <artifactId>microprofile-restclient</artifactId>
+    </dependency>
+
+
+
 
     <!--TODO remove when spec is adjusted-->
     <dependency>

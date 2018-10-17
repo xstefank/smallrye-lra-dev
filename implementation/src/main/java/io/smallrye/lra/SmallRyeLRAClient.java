@@ -37,9 +37,13 @@ public class SmallRyeLRAClient implements LRAClient {
     
     @Override
     public void setCoordinatorURI(URI uri) {
-        coordinatorRESTClient = RestClientBuilder.newBuilder()
-                .baseUri(uri)
-                .build(LRACoordinatorRESTClient.class);
+        try {
+            coordinatorRESTClient = RestClientBuilder.newBuilder()
+                    .baseUrl(uri.toURL())
+                    .build(LRACoordinatorRESTClient.class);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
