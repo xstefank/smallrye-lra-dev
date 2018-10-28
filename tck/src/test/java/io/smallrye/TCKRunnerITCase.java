@@ -4,7 +4,7 @@ import org.junit.Test;
 
 import java.io.File;
 
-public class TCKTestCase {
+public class TCKRunnerITCase {
 
     private static final long DESTROY_TIMEOUT = 5000;
 
