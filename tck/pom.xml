@@ -101,12 +101,12 @@
                 <executions>
                     <execution>
                         <id>Narayana LRA coordinator download</id>
-                        <phase>generate-sources</phase>
+                        <phase>generate-test-resources</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <executable>${basedir}/download_narayana_coordinator.sh</executable>
+                            <executable>${basedir}/scripts/download_narayana_coordinator.sh</executable>
                         </configuration>
                     </execution>
                 </executions>
