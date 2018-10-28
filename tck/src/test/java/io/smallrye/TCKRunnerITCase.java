@@ -26,9 +26,10 @@ public class TCKRunnerITCase {
         Process TCKClientProcess = TCKClientPb.start();
         Thread.sleep(10000);
 
-        ProcessBuilder tckPb = new ProcessBuilder("curl", "-XPUT", "http://localhost:8180/tck/all\\?verbose\\=false", "-i");
+        ProcessBuilder tckPb = new ProcessBuilder("curl", "-XPUT", "http://localhost:8180/tck/all");
         tckPb.inheritIO();
         tckPb.redirectOutput(new File("target/tck-execution-output.txt"));
+        coordinatorPb.directory(new File("."));
         System.out.println("Executing TCK run...");
         Process tckProcess = tckPb.start();
 
