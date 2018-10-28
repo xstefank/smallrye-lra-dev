@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASEDIR=..
+BASEDIR=.
 NARAYANA_VERSION=5.9.0.Final
 
 if [ -f $BASEDIR/lra-coordinator-swarm.jar ]; then
