@@ -1,5 +1,7 @@
 package io.smallrye.lra;
 
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -18,6 +20,7 @@ import static io.smallrye.lra.utils.LRAConstants.STATUS;
 import static io.smallrye.lra.utils.LRAConstants.TIMELIMIT;
 
 @Path("/lra-coordinator")
+@RegisterRestClient
 public interface LRACoordinatorRESTClient {
     
     @POST

@@ -32,7 +32,7 @@ public class SmallRyeLRAClient implements LRAClient {
 
     private static final Logger log = Logger.getLogger(SmallRyeLRAClient.class);
     
-//    @Inject
+    @Inject
     private LRACoordinatorRESTClient coordinatorRESTClient;
     
     @Override

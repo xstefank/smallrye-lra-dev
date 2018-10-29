@@ -10,7 +10,7 @@ public class TCKRunnerITCase {
 
     @Test
     public void runTCK() throws Exception {
-        ProcessBuilder coordinatorPb = new ProcessBuilder("java", "-jar", "lra-coordinator-swarm.jar");
+        ProcessBuilder coordinatorPb = new ProcessBuilder("java", "-jar", "lra-coordinator-swarm.jar", "-Dswarm.http.port=8082");
         coordinatorPb.inheritIO();
         coordinatorPb.directory(new File("."));
         coordinatorPb.redirectOutput(new File("target/coodinator-output.txt"));
@@ -18,7 +18,9 @@ public class TCKRunnerITCase {
         Process coordinatorProcess = coordinatorPb.start();
         Thread.sleep(10000);
 
-        ProcessBuilder TCKClientPb = new ProcessBuilder("java", "-jar", "smallrye-lra-tck-1.0-SNAPSHOT-thorntail.jar", "-Dswarm.port.offset=100");
+        ProcessBuilder TCKClientPb = new ProcessBuilder("java", "-jar", 
+                "smallrye-lra-tck-1.0-SNAPSHOT-thorntail.jar", "-Dswarm.port.offset=100",
+                "-Dio.smallrye.lra.LRACoordinatorRESTClient/mp-rest/url=http://localhost:8082");
         TCKClientPb.inheritIO();
         TCKClientPb.redirectOutput(new File("target/tck-client-output.txt"));
         TCKClientPb.directory(new File("target"));
