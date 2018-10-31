@@ -21,7 +21,6 @@ public class TCKRunnerITCase {
         coordinatorPb.redirectOutput(new File("target/coodinator-output.txt"));
         System.out.println("Starting LRA coordinator...");
         Process coordinatorProcess = coordinatorPb.start();
-        Thread.sleep(10000);
 
         ProcessBuilder TCKClientPb = new ProcessBuilder("java", "-jar", 
                 "smallrye-lra-tck-1.0-SNAPSHOT-thorntail.jar", "-Dswarm.port.offset=100", 
@@ -31,12 +30,7 @@ public class TCKRunnerITCase {
         TCKClientPb.directory(new File("target"));
         System.out.println("Starting LRA TCK client...");
         Process TCKClientProcess = TCKClientPb.start();
-        Thread.sleep(10000);
-
-//        System.out.println("Executing TCK run...");
-//        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/all");
-//        Response response = target.request().put(Entity.json(""));
-//        System.out.println(response.readEntity(String.class));
+        Thread.sleep(15000);
         
         ProcessBuilder tckPb = new ProcessBuilder("curl", "-XPUT", "http://localhost:8180/tck/all");
         tckPb.inheritIO();
