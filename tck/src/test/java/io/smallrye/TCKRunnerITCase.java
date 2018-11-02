@@ -2,11 +2,6 @@ package io.smallrye;
 
 import org.junit.Test;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
 import java.io.File;
 
 public class TCKRunnerITCase {
@@ -26,7 +21,6 @@ public class TCKRunnerITCase {
                 "smallrye-lra-tck-1.0-SNAPSHOT-thorntail.jar", "-Dswarm.port.offset=100", 
                 "-Dio.smallrye.lra.LRACoordinatorRESTClient/mp-rest/url=http://localhost:8080");
         TCKClientPb.inheritIO();
-        TCKClientPb.redirectOutput(new File("target/tck-client-output.txt"));
         TCKClientPb.directory(new File("target"));
         System.out.println("Starting LRA TCK client...");
         Process TCKClientProcess = TCKClientPb.start();

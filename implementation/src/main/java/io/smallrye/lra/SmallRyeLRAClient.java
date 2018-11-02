@@ -5,7 +5,6 @@ import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
 import org.eclipse.microprofile.lra.client.LRAClient;
 import org.eclipse.microprofile.lra.client.LRAInfo;
-import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -21,6 +20,7 @@ import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -35,22 +35,6 @@ public class SmallRyeLRAClient implements LRAClient {
     @Inject
     private LRACoordinatorRESTClient coordinatorRESTClient;
     
-    @Override
-    public void setCoordinatorURI(URI uri) {
-        try {
-            coordinatorRESTClient = RestClientBuilder.newBuilder()
-                    .baseUrl(uri.toURL())
-                    .build(LRACoordinatorRESTClient.class);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void setRecoveryCoordinatorURI(URI uri) {
-        //no-op
-    }
-
     @Override
     public void close() {
         
@@ -152,7 +136,10 @@ public class SmallRyeLRAClient implements LRAClient {
                         String.format("Unable to get %s LRAs", status == null ? "all" : status), null);
             }
 
-            return response.readEntity(new GenericType<List<LRAInfo>>() {});
+            List<SmallRyeLRAInfo> smallRyeLRAInfos = response.readEntity(new GenericType<List<SmallRyeLRAInfo>>() {});
+            List<LRAInfo> result = new ArrayList<>();
+            smallRyeLRAInfos.forEach(result::add);
+            return result;
         } catch (ProcessingException e) {
             throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
                     String.format("Invalid content received for %s LRAs", status == null ? "all" : status), e);
