@@ -2,7 +2,17 @@ package io.smallrye;
 
 import org.junit.Test;
 
+import javax.json.Json;
+import javax.json.JsonReader;
+import javax.json.JsonWriter;
+import javax.json.spi.JsonProvider;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 import java.io.File;
+import java.io.StringReader;
+
+import static java.util.Collections.singletonMap;
 
 public class TCKRunnerITCase {
 
@@ -19,24 +29,28 @@ public class TCKRunnerITCase {
 
         ProcessBuilder TCKClientPb = new ProcessBuilder("java", "-jar", 
                 "tck-client-thorntail.jar", "-Dswarm.port.offset=100", 
-                "-Dio.smallrye.lra.LRACoordinatorRESTClient/mp-rest/url=http://localhost:8080");
+                "-Dio.smallrye.lra.LRACoordinatorRESTClient/mp-rest/url=http://localhost:8080", 
+                "-Dservice.http.port=8180");
         TCKClientPb.inheritIO();
         TCKClientPb.directory(new File("../tck-client/target"));
         System.out.println("Starting LRA TCK client...");
         Process TCKClientProcess = TCKClientPb.start();
         Thread.sleep(15000);
-        
-        ProcessBuilder tckPb = new ProcessBuilder("curl", "-XPUT", "http://localhost:8180/tck/all");
-        tckPb.inheritIO();
-        tckPb.redirectOutput(new File("target/tck-execution-output.txt"));
-        coordinatorPb.directory(new File("."));
-        System.out.println("Executing TCK run...");
-        Process tckProcess = tckPb.start();
 
-        tckProcess.waitFor();
-        
+        System.out.println("Executing TCK run...");
+        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/all");
+        Response response = target.request().put(null);
+
         destroyProcess(coordinatorProcess);
         destroyProcess(TCKClientProcess);
+
+        System.out.printf("%n------- TEST RESULTS -------%n");
+        final JsonProvider provider = JsonProvider.provider(); // doesnt need to be instantiated each time
+        try (final JsonReader reader = Json.createReader(new StringReader(response.readEntity(String.class)))) {
+            try (final JsonWriter writer = provider.createWriterFactory(singletonMap("javax.json.stream.JsonGenerator.prettyPrinting", "true")).createWriter(System.out)) {
+                writer.write(reader.read());
+            }
+        }
     }
 
     private void destroyProcess(Process process) throws InterruptedException {
