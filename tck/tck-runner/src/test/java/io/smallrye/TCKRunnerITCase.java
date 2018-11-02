@@ -18,10 +18,10 @@ public class TCKRunnerITCase {
         Process coordinatorProcess = coordinatorPb.start();
 
         ProcessBuilder TCKClientPb = new ProcessBuilder("java", "-jar", 
-                "smallrye-lra-tck-1.0-SNAPSHOT-thorntail.jar", "-Dswarm.port.offset=100", 
+                "tck-client-thorntail.jar", "-Dswarm.port.offset=100", 
                 "-Dio.smallrye.lra.LRACoordinatorRESTClient/mp-rest/url=http://localhost:8080");
         TCKClientPb.inheritIO();
-        TCKClientPb.directory(new File("target"));
+        TCKClientPb.directory(new File("../tck-client/target"));
         System.out.println("Starting LRA TCK client...");
         Process TCKClientProcess = TCKClientPb.start();
         Thread.sleep(15000);
