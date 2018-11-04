@@ -52,12 +52,12 @@ public class SmallRyeLRAClient implements LRAClient {
                 throw new NotFoundException("Unable to start nested LRA for parent: " + parentLRA);
             }
 
-            if (isInvalidResponse(response)) {
+            if (!hasStatusCodeIn(response, Response.Status.CREATED)) {
                 throw new GenericLRAException(null, response.getStatus(),
                         "Unexpected return code of LRA start for" + Utils.getFormattedString(parentLRA, clientID, timeout, unit), null);
             }
 
-            return new URL(response.readEntity(String.class));
+            return new URL(response.getHeaderString(LRAClient.LRA_HTTP_HEADER));
             
         } catch (MalformedURLException e) {
             throw new GenericLRAException(null, response.getStatus(),
@@ -290,6 +290,10 @@ public class SmallRyeLRAClient implements LRAClient {
                 .request(MediaType.TEXT_PLAIN);
     }
 
+    private boolean hasStatusCodeIn(Response response, Response.Status... statuses) {
+        return Arrays.stream(statuses).anyMatch(s -> s.getStatusCode() == response.getStatus());
+    }
+    
     private boolean isInvalidResponse(Response response) {
         return response.getStatus() != Response.Status.OK.getStatusCode();
     }
