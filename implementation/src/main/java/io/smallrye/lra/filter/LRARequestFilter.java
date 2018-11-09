@@ -9,6 +9,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -18,6 +19,9 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
     @Context
     private ResourceInfo resourceInfo;
+
+    @Context
+    private UriInfo uriInfo;
     
     @Inject
     private LRAClient lraClient;
@@ -101,13 +105,19 @@ public class LRARequestFilter implements ContainerRequestFilter {
         }
 
         if (shouldJoin) {
-            LRAResource lraResource = createLRAResource(resourceMethod.getDeclaringClass());
+            LRAResource lraResource = createLRAResource(resourceInfo.getResourceClass());
         }
     }
 
     private LRAResource createLRAResource(Class<?> clazz) {
+        LRAResource.LRAResourceBuilder builder = LRAResource.builder();
+
+        System.out.println("base uri " + uriInfo.getBaseUri());
+        System.out.println("absolute path " + uriInfo.getAbsolutePath());
+        System.out.println("absolute path " + uriInfo.getAbsolutePath());
+        
         for (Method method : clazz.getDeclaredMethods()) {
-            System.out.println(method.getName());
+            
         }
 
         return LRAResource.builder().build();
