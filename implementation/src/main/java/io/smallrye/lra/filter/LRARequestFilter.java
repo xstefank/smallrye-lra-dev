@@ -1,5 +1,6 @@
-package io.smallrye.lra;
+package io.smallrye.lra.filter;
 
+import io.smallrye.lra.model.LRAResource;
 import org.eclipse.microprofile.lra.annotation.LRA;
 import org.eclipse.microprofile.lra.client.LRAClient;
 
@@ -31,7 +32,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
         }
 
         String lraHeader = ctx.getHeaderString(LRAClient.LRA_HTTP_HEADER);
-        boolean shouldeJoin = lra.join();
+        boolean shouldJoin = lra.join();
 
         switch (lra.value()) {
             /**
@@ -99,10 +100,18 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
         }
 
-        if (shouldeJoin) {
-//            lraClient.joinLRA(lraHeader)
+        if (shouldJoin) {
+            LRAResource lraResource = createLRAResource(resourceMethod.getDeclaringClass());
         }
     }
-    
-    
+
+    private LRAResource createLRAResource(Class<?> clazz) {
+        for (Method method : clazz.getDeclaredMethods()) {
+            System.out.println(method.getName());
+        }
+
+        return LRAResource.builder().build();
+    }
+
+
 }
