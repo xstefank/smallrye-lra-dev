@@ -128,9 +128,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
         for (Method method : clazz.getMethods()) {
             
-            if (method.getAnnotation(LRA.class) != null) {
-                resourceBuilder.lraUri(uriBuilder.path(getPath(method)).build());
-            } else if (method.getAnnotation(Complete.class) != null) {
+            if (method.getAnnotation(Complete.class) != null) {
                 resourceBuilder.completeUri(uriBuilder.path(getPath(method)).build());
             } else if (method.getAnnotation(Compensate.class) != null) {
                 resourceBuilder.compensateUri(uriBuilder.path(getPath(method)).build());

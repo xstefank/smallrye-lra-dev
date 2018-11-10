@@ -4,24 +4,18 @@ import java.net.URI;
 
 public class LRAResource {
     
-    private URI lraUri;
     private URI completeUri;
     private URI compensateUri;
     private URI statusUri;
     private URI forgetUri;
     private URI leaveUri;
 
-    public LRAResource(URI lraUri, URI completeUri, URI compensateUri, URI statusUri, URI forgetUri, URI leaveUri) {
-        this.lraUri = lraUri;
+    public LRAResource(URI completeUri, URI compensateUri, URI statusUri, URI forgetUri, URI leaveUri) {
         this.completeUri = completeUri;
         this.compensateUri = compensateUri;
         this.statusUri = statusUri;
         this.forgetUri = forgetUri;
         this.leaveUri = leaveUri;
-    }
-
-    public URI getLraUri() {
-        return lraUri;
     }
 
     public URI getCompleteUri() {
@@ -51,8 +45,7 @@ public class LRAResource {
     @Override
     public String toString() {
         return "LRAResource{" +
-                "lraUri=" + lraUri +
-                ", completeUri=" + completeUri +
+                "completeUri=" + completeUri +
                 ", compensateUri=" + compensateUri +
                 ", statusUri=" + statusUri +
                 ", forgetUri=" + forgetUri +
@@ -62,17 +55,11 @@ public class LRAResource {
 
     public static final class LRAResourceBuilder {
 
-        private URI lraUri;
         private URI completeUri;
         private URI compensateUri;
         private URI statusUri;
         private URI forgetUri;
         private URI leaveUri;
-
-        public LRAResourceBuilder lraUri(URI lraUri) {
-            this.lraUri = lraUri;
-            return this;
-        }
 
         public LRAResourceBuilder completeUri(URI completeUri) {
             this.completeUri = completeUri;
@@ -100,7 +87,7 @@ public class LRAResource {
         }
         
         public LRAResource build() {
-            return new LRAResource(lraUri, completeUri, compensateUri, statusUri, forgetUri, leaveUri);
+            return new LRAResource(completeUri, compensateUri, statusUri, forgetUri, leaveUri);
         }
         
     }
