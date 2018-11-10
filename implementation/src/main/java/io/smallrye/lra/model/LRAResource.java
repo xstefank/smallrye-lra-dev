@@ -1,92 +1,106 @@
 package io.smallrye.lra.model;
 
+import java.net.URI;
+
 public class LRAResource {
     
-    private String lraUrl;
-    private String completeUrl;
-    private String compensateUrl;
-    private String statusUrl;
-    private String forgetUrl;
-    private String leaveUrl;
+    private URI lraUri;
+    private URI completeUri;
+    private URI compensateUri;
+    private URI statusUri;
+    private URI forgetUri;
+    private URI leaveUri;
 
-    public LRAResource(String lraUrl, String completeUrl, String compensateUrl, String statusUrl, String forgetUrl, String leaveUrl) {
-        this.lraUrl = lraUrl;
-        this.completeUrl = completeUrl;
-        this.compensateUrl = compensateUrl;
-        this.statusUrl = statusUrl;
-        this.forgetUrl = forgetUrl;
-        this.leaveUrl = leaveUrl;
+    public LRAResource(URI lraUri, URI completeUri, URI compensateUri, URI statusUri, URI forgetUri, URI leaveUri) {
+        this.lraUri = lraUri;
+        this.completeUri = completeUri;
+        this.compensateUri = compensateUri;
+        this.statusUri = statusUri;
+        this.forgetUri = forgetUri;
+        this.leaveUri = leaveUri;
     }
 
-    public String getLraUrl() {
-        return lraUrl;
+    public URI getLraUri() {
+        return lraUri;
     }
 
-    public String getCompleteUrl() {
-        return completeUrl;
+    public URI getCompleteUri() {
+        return completeUri;
     }
 
-    public String getCompensateUrl() {
-        return compensateUrl;
+    public URI getCompensateUri() {
+        return compensateUri;
     }
 
-    public String getStatusUrl() {
-        return statusUrl;
+    public URI getStatusUri() {
+        return statusUri;
     }
 
-    public String getForgetUrl() {
-        return forgetUrl;
+    public URI getForgetUri() {
+        return forgetUri;
     }
 
-    public String getLeaveUrl() {
-        return leaveUrl;
+    public URI getLeaveUri() {
+        return leaveUri;
     }
-    
+
     public static LRAResourceBuilder builder() {
         return new LRAResourceBuilder();
     }
-    
+
+    @Override
+    public String toString() {
+        return "LRAResource{" +
+                "lraUri=" + lraUri +
+                ", completeUri=" + completeUri +
+                ", compensateUri=" + compensateUri +
+                ", statusUri=" + statusUri +
+                ", forgetUri=" + forgetUri +
+                ", leaveUri=" + leaveUri +
+                '}';
+    }
+
     public static final class LRAResourceBuilder {
 
-        private String lraUrl;
-        private String completeUrl;
-        private String compensateUrl;
-        private String statusUrl;
-        private String forgetUrl;
-        private String leaveUrl;
+        private URI lraUri;
+        private URI completeUri;
+        private URI compensateUri;
+        private URI statusUri;
+        private URI forgetUri;
+        private URI leaveUri;
 
-        public LRAResourceBuilder lraUrl(String lraUrl) {
-            this.lraUrl = lraUrl;
+        public LRAResourceBuilder lraUri(URI lraUri) {
+            this.lraUri = lraUri;
             return this;
         }
 
-        public LRAResourceBuilder completeUrl(String completeUrl) {
-            this.completeUrl = completeUrl;
+        public LRAResourceBuilder completeUri(URI completeUri) {
+            this.completeUri = completeUri;
             return this;
         }
 
-        public LRAResourceBuilder compensateUrl(String compensateUrl) {
-            this.compensateUrl = compensateUrl;
+        public LRAResourceBuilder compensateUri(URI compensateUri) {
+            this.compensateUri = compensateUri;
             return this;
         }
 
-        public LRAResourceBuilder statusUrl(String statusUrl) {
-            this.statusUrl = statusUrl;
+        public LRAResourceBuilder statusUri(URI statusUri) {
+            this.statusUri = statusUri;
             return this;
         }
 
-        public LRAResourceBuilder forgetUrl(String forgetUrl) {
-            this.forgetUrl = forgetUrl;
+        public LRAResourceBuilder forgetUri(URI forgetUri) {
+            this.forgetUri = forgetUri;
             return this;
         }
 
-        public LRAResourceBuilder leaveUrl(String leaveUrl) {
-            this.leaveUrl = leaveUrl;
+        public LRAResourceBuilder leaveUri(URI leaveUri) {
+            this.leaveUri = leaveUri;
             return this;
         }
         
         public LRAResource build() {
-            return new LRAResource(lraUrl, completeUrl, compensateUrl, statusUrl, forgetUrl, leaveUrl);
+            return new LRAResource(lraUri, completeUri, compensateUri, statusUri, forgetUri, leaveUri);
         }
         
     }
