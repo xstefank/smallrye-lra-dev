@@ -37,7 +37,7 @@ public class TCKRunnerITCase {
         TCKClientPb.directory(new File("../tck-client/target"));
         System.out.println("Starting LRA TCK client...");
         Process TCKClientProcess = TCKClientPb.start();
-        Thread.sleep(15000);
+        Thread.sleep(20000);
 
         System.out.println("Executing TCK run...");
         WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/joinLRAViaHeader");

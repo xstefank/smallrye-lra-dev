@@ -1,5 +1,6 @@
 package io.smallrye.lra;
 
+import io.smallrye.lra.model.LRAResource;
 import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
@@ -210,13 +211,13 @@ public class SmallRyeLRAClient implements LRAClient {
     @Override
     public String joinLRA(URL lraId, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
         try {
-            LRAParticipantResourceClass participantResourceClass = new LRAParticipantResourceClass(resourceClass);
+            LRAResource resource = new LRAResource(resourceClass, baseUri);
             return joinLRA(lraId, 0L, 
-                    participantResourceClass.getCompensateURL(baseUri),
-                    participantResourceClass.getCompleteURL(baseUri),
-                    participantResourceClass.getForgetURL(baseUri),
-                    participantResourceClass.getLeaveURL(baseUri),
-                    participantResourceClass.getStatusURL(baseUri),
+                    resource.getCompensateUri().toURL(),
+                    resource.getCompleteUri().toURL(),
+                    resource.getForgetUri().toURL(),
+                    resource.getLeaveUri().toURL(),
+                    resource.getStatusUri().toURL(),
                     compensatorData);
         } catch (IllegalArgumentException | MalformedURLException e) {
             throw new GenericLRAException(lraId, -1, e.getMessage(), e);

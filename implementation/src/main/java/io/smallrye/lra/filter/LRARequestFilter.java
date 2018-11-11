@@ -1,28 +1,18 @@
 package io.smallrye.lra.filter;
 
-import io.smallrye.lra.model.LRAResource;
-import org.eclipse.microprofile.lra.annotation.Compensate;
-import org.eclipse.microprofile.lra.annotation.Complete;
-import org.eclipse.microprofile.lra.annotation.Forget;
 import org.eclipse.microprofile.lra.annotation.LRA;
-import org.eclipse.microprofile.lra.annotation.Leave;
-import org.eclipse.microprofile.lra.annotation.Status;
-import org.eclipse.microprofile.lra.client.GenericLRAException;
 import org.eclipse.microprofile.lra.client.LRAClient;
 
 import javax.inject.Inject;
-import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.net.URI;
+import java.net.URL;
 
 @Provider
 public class LRARequestFilter implements ContainerRequestFilter {
@@ -46,6 +36,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
         }
 
         String lraHeader = ctx.getHeaderString(LRAClient.LRA_HTTP_HEADER);
+        URL lraId = lraHeader != null ? new URL(lraHeader) : null;
         boolean shouldJoin = lra.join();
 
         switch (lra.value()) {
@@ -114,42 +105,9 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
         }
 
-        if (shouldJoin) {
-            LRAResource lraResource = createLRAResource(resourceInfo.getResourceClass());
+        if (shouldJoin && lraId != null) {
+            lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), uriInfo.getBaseUri(), null);
         }
     }
-
-    private LRAResource createLRAResource(Class<?> clazz) {
-        LRAResource.LRAResourceBuilder resourceBuilder = LRAResource.builder();
-
-        Path resourcePath = clazz.getAnnotation(Path.class);
-
-        UriBuilder uriBuilder = uriInfo.getBaseUriBuilder().path(resourcePath != null ? resourcePath.value() : "");
-
-        for (Method method : clazz.getMethods()) {
-            
-            if (method.getAnnotation(Complete.class) != null) {
-                resourceBuilder.completeUri(uriBuilder.path(getPath(method)).build());
-            } else if (method.getAnnotation(Compensate.class) != null) {
-                resourceBuilder.compensateUri(uriBuilder.path(getPath(method)).build());
-            } else if (method.getAnnotation(Status.class) != null) {
-                resourceBuilder.statusUri(uriBuilder.path(getPath(method)).build());
-            } else if (method.getAnnotation(Forget.class) != null) {
-                resourceBuilder.forgetUri(uriBuilder.path(getPath(method)).build());
-            } else if (method.getAnnotation(Leave.class) != null) {
-                resourceBuilder.leaveUri(uriBuilder.path(getPath(method)).build());
-            }
-        }
-
-        LRAResource build = resourceBuilder.build();
-        System.out.println("XXXXXXXXXXXXXXXXXXX" + build);
-        return build;
-    }
-
-    private String getPath(Method method) {
-        Path methodPath = method.getAnnotation(Path.class);
-        return methodPath != null ? methodPath.value() : "";
-    }
-
 
 }

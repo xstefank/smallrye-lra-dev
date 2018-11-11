@@ -1,5 +1,14 @@
 package io.smallrye.lra.model;
 
+import org.eclipse.microprofile.lra.annotation.Compensate;
+import org.eclipse.microprofile.lra.annotation.Complete;
+import org.eclipse.microprofile.lra.annotation.Forget;
+import org.eclipse.microprofile.lra.annotation.Leave;
+import org.eclipse.microprofile.lra.annotation.Status;
+
+import javax.ws.rs.Path;
+import javax.ws.rs.core.UriBuilder;
+import java.lang.reflect.Method;
 import java.net.URI;
 
 public class LRAResource {
@@ -16,6 +25,34 @@ public class LRAResource {
         this.statusUri = statusUri;
         this.forgetUri = forgetUri;
         this.leaveUri = leaveUri;
+    }
+
+    public LRAResource(Class<?> resourceClass, URI baseUri) {
+        LRAResource.LRAResourceBuilder resourceBuilder = LRAResource.builder();
+
+        Path resourcePath = resourceClass.getAnnotation(Path.class);
+
+        UriBuilder uriBuilder = UriBuilder.fromUri(baseUri).path(resourcePath != null ? resourcePath.value() : "");
+
+        for (Method method : resourceClass.getMethods()) {
+
+            if (method.getAnnotation(Complete.class) != null) {
+                this.completeUri = uriBuilder.path(getPath(method)).build();
+            } else if (method.getAnnotation(Compensate.class) != null) {
+                this.compensateUri = uriBuilder.path(getPath(method)).build();
+            } else if (method.getAnnotation(Status.class) != null) {
+                this.statusUri = uriBuilder.path(getPath(method)).build();
+            } else if (method.getAnnotation(Forget.class) != null) { 
+                this.forgetUri = uriBuilder.path(getPath(method)).build();
+            } else if (method.getAnnotation(Leave.class) != null) {
+                this.leaveUri = uriBuilder.path(getPath(method)).build();
+            }
+        }
+    }
+
+    private String getPath(Method method) {
+        Path methodPath = method.getAnnotation(Path.class);
+        return methodPath != null ? methodPath.value() : "";
     }
 
     public URI getCompleteUri() {
