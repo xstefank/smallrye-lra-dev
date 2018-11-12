@@ -194,7 +194,9 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
         
         try {
-            response = coordinatorRESTClient.joinLRA(Utils.extractLraId(lraId), timelimit,
+
+            String lraId1 = Utils.extractLraId(lraId);
+            response = coordinatorRESTClient.joinLRA(lraId1, timelimit, lraId.toString(), "http://localhost:8180/activitities/compensate",
                     new ParticipantDefinition(completeUrl, compensateUrl, forgetUrl,
                             leaveUrl, statusUrl, compensatorData));
 
@@ -203,9 +205,13 @@ public class SmallRyeLRAClient implements LRAClient {
             }
 
             return response.readEntity(String.class);
+        } catch(Throwable t) {
+            System.out.println("XXXXXXXXXXXX" + t.toString());
         } finally {
             if (response != null) response.close();
         }
+        
+        return null;
     }
 
     @Override

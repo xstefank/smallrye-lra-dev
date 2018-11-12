@@ -1,10 +1,12 @@
 package io.smallrye.lra;
 
+import org.eclipse.microprofile.lra.client.LRAClient;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -56,10 +58,12 @@ public interface LRACoordinatorRESTClient {
     Response getLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId);
 
     @PUT
-    @Path("/{" + LRA_ID_PATH_PARAM + "}/join")
+    @Path("/{" + LRA_ID_PATH_PARAM + "}")
     @Produces(MediaType.APPLICATION_JSON)
     Response joinLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId, 
                      @QueryParam(TIMELIMIT) @DefaultValue("0") Long timelimit,
+                     @HeaderParam(LRAClient.LRA_HTTP_HEADER) String lraHeader,
+                     @HeaderParam("Link") String linkHeader,
                      ParticipantDefinition participant);
     
     @DELETE

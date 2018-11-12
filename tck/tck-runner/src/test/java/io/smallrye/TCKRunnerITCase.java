@@ -28,7 +28,7 @@ public class TCKRunnerITCase {
         Process coordinatorProcess = coordinatorPb.start();
 
         ProcessBuilder TCKClientPb = new ProcessBuilder("java", 
-//                "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9000",
+                "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9000",
                 "-jar", 
                 "tck-client-thorntail.jar", "-Dswarm.port.offset=100", 
                 "-Dio.smallrye.lra.LRACoordinatorRESTClient/mp-rest/url=http://localhost:8080", 

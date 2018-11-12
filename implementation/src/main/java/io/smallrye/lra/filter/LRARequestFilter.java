@@ -13,6 +13,7 @@ import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.concurrent.TimeUnit;
 
 @Provider
 public class LRARequestFilter implements ContainerRequestFilter {
@@ -46,8 +47,8 @@ public class LRARequestFilter implements ContainerRequestFilter {
              *  another JAX-RS filter will complete the LRA.
              */
             case REQUIRED:
-                if (lraHeader != null) {
-                    System.out.println(lraHeader);
+                if (lraId == null) {
+                    lraId = lraClient.startLRA(resourceInfo.getResourceClass().getName(), 0L, TimeUnit.SECONDS);
                 }
                 break;
 
