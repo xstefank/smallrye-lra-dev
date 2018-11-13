@@ -206,12 +206,10 @@ public class SmallRyeLRAClient implements LRAClient {
 
             return response.readEntity(String.class);
         } catch(Throwable t) {
-            System.out.println("XXXXXXXXXXXX" + t.toString());
+            throw new GenericLRAException(lraId, -1, "Unable to join LRA", t);
         } finally {
             if (response != null) response.close();
         }
-        
-        return null;
     }
 
     @Override
