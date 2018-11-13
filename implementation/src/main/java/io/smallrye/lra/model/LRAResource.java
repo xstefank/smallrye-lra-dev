@@ -37,15 +37,15 @@ public class LRAResource {
         for (Method method : resourceClass.getMethods()) {
 
             if (method.getAnnotation(Complete.class) != null) {
-                this.completeUri = uriBuilder.path(getPath(method)).build();
+                this.completeUri = uriBuilder.clone().path(getPath(method)).build();
             } else if (method.getAnnotation(Compensate.class) != null) {
-                this.compensateUri = uriBuilder.path(getPath(method)).build();
+                this.compensateUri = uriBuilder.clone().path(getPath(method)).build();
             } else if (method.getAnnotation(Status.class) != null) {
-                this.statusUri = uriBuilder.path(getPath(method)).build();
+                this.statusUri = uriBuilder.clone().path(getPath(method)).build();
             } else if (method.getAnnotation(Forget.class) != null) { 
-                this.forgetUri = uriBuilder.path(getPath(method)).build();
+                this.forgetUri = uriBuilder.clone().path(getPath(method)).build();
             } else if (method.getAnnotation(Leave.class) != null) {
-                this.leaveUri = uriBuilder.path(getPath(method)).build();
+                this.leaveUri = uriBuilder.clone().path(getPath(method)).build();
             }
         }
     }

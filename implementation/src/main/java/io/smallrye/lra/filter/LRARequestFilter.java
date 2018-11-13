@@ -109,6 +109,8 @@ public class LRARequestFilter implements ContainerRequestFilter {
         if (shouldJoin && lraId != null) {
             lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), uriInfo.getBaseUri(), null);
         }
+        
+        ctx.setProperty(LRAClient.LRA_HTTP_HEADER, lraId);
     }
 
 }

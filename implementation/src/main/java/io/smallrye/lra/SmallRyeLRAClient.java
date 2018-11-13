@@ -16,6 +16,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
@@ -104,6 +105,8 @@ public class SmallRyeLRAClient implements LRAClient {
 
             return response.readEntity(String.class);
 
+        } catch(Throwable t) {
+            throw new GenericLRAException(lraId, -1, "Unable to end LRA", t);
         } finally {
             if (response != null) {
                 response.close();
@@ -194,11 +197,12 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
         
         try {
-
-            String lraId1 = Utils.extractLraId(lraId);
-            response = coordinatorRESTClient.joinLRA(lraId1, timelimit, lraId.toString(), "http://localhost:8180/activitities/compensate",
-                    new ParticipantDefinition(completeUrl, compensateUrl, forgetUrl,
-                            leaveUrl, statusUrl, compensatorData));
+            String linkHeader = createLinkHeader(compensateUrl, completeUrl, forgetUrl, leaveUrl, statusUrl);
+            System.out.println("YYYYYYYYYYYYYY " + linkHeader);
+            response = coordinatorRESTClient.joinLRA(Utils.extractLraId(lraId), timelimit, 
+                    lraId.toString(),
+                    linkHeader,
+                   compensatorData);
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to join LRA", null);
@@ -210,6 +214,22 @@ public class SmallRyeLRAClient implements LRAClient {
         } finally {
             if (response != null) response.close();
         }
+    }
+
+    private String createLinkHeader(URL compensateUrl, URL completeUrl, URL forgetUrl, URL leaveUrl, URL statusUrl) {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append(createLink("compensate", compensateUrl)).append(",")
+                .append(createLink("complete", completeUrl)).append(",")
+                .append(createLink("forget", forgetUrl)).append(",")
+                .append(createLink("leave", leaveUrl)).append(",")
+                .append(createLink("status", statusUrl));
+
+        return sb.toString();
+    }
+
+    private Link createLink(String kind, URL url) {
+        return Link.fromUri(url.toExternalForm()).title(kind + "URI").rel(kind).type(MediaType.TEXT_PLAIN).build();
     }
 
     @Override

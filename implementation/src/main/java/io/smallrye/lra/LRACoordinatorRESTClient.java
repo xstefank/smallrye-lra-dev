@@ -64,7 +64,7 @@ public interface LRACoordinatorRESTClient {
                      @QueryParam(TIMELIMIT) @DefaultValue("0") Long timelimit,
                      @HeaderParam(LRAClient.LRA_HTTP_HEADER) String lraHeader,
                      @HeaderParam("Link") String linkHeader,
-                     ParticipantDefinition participant);
+                     String compensatorData);
     
     @DELETE
     @Path("/{" + LRA_ID_PATH_PARAM + "}/{" + RECOVERY_ID_PATH_NAME + "}")
