@@ -36,16 +36,16 @@ public class LRAResource {
 
         for (Method method : resourceClass.getMethods()) {
 
-            if (method.getAnnotation(Complete.class) != null) {
-                this.completeUri = uriBuilder.clone().path(getPath(method)).build();
-            } else if (method.getAnnotation(Compensate.class) != null) {
-                this.compensateUri = uriBuilder.clone().path(getPath(method)).build();
-            } else if (method.getAnnotation(Status.class) != null) {
-                this.statusUri = uriBuilder.clone().path(getPath(method)).build();
-            } else if (method.getAnnotation(Forget.class) != null) { 
-                this.forgetUri = uriBuilder.clone().path(getPath(method)).build();
-            } else if (method.getAnnotation(Leave.class) != null) {
-                this.leaveUri = uriBuilder.clone().path(getPath(method)).build();
+            if (method.getAnnotation(Complete.class) != null && completeUri == null) {
+                completeUri = uriBuilder.clone().path(getPath(method)).build();
+            } else if (method.getAnnotation(Compensate.class) != null && compensateUri == null) {
+                compensateUri = uriBuilder.clone().path(getPath(method)).build();
+            } else if (method.getAnnotation(Status.class) != null && statusUri == null) {
+                statusUri = uriBuilder.clone().path(getPath(method)).build();
+            } else if (method.getAnnotation(Forget.class) != null && forgetUri == null) { 
+                forgetUri = uriBuilder.clone().path(getPath(method)).build();
+            } else if (method.getAnnotation(Leave.class) != null && leaveUri == null) {
+                leaveUri = uriBuilder.clone().path(getPath(method)).build();
             }
         }
     }
