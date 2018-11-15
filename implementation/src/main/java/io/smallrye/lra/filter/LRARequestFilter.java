@@ -23,10 +23,10 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
     @Context
     private UriInfo uriInfo;
-    
+
     @Inject
     private LRAClient lraClient;
-    
+
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
         Method resourceMethod = resourceInfo.getResourceMethod();
@@ -38,6 +38,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
         String lraHeader = ctx.getHeaderString(LRAClient.LRA_HTTP_HEADER);
         URL lraId = lraHeader != null ? new URL(lraHeader) : null;
+        ctx.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, new LRAContext(lraId));
         boolean shouldJoin = lra.join();
 
         switch (lra.value()) {
@@ -49,6 +50,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
             case REQUIRED:
                 if (lraId == null) {
                     lraId = lraClient.startLRA(resourceInfo.getResourceClass().getName(), 0L, TimeUnit.SECONDS);
+                    ctx.setProperty("lraContext", new LRAContext(lraId));
                 }
                 break;
 
@@ -109,7 +111,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
         if (shouldJoin && lraId != null) {
             lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), uriInfo.getBaseUri(), null);
         }
-        
+
         ctx.setProperty(LRAClient.LRA_HTTP_HEADER, lraId);
     }
 
