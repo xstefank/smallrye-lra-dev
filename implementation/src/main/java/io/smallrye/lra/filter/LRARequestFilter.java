@@ -1,6 +1,9 @@
 package io.smallrye.lra.filter;
 
+import io.smallrye.lra.SmallRyeLRAClient;
+import io.smallrye.lra.utils.LRAConstants;
 import org.eclipse.microprofile.lra.annotation.LRA;
+import org.eclipse.microprofile.lra.annotation.TimeLimit;
 import org.eclipse.microprofile.lra.client.LRAClient;
 
 import javax.inject.Inject;
@@ -25,7 +28,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
     private UriInfo uriInfo;
 
     @Inject
-    private LRAClient lraClient;
+    private SmallRyeLRAClient lraClient;
 
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
@@ -36,9 +39,11 @@ public class LRARequestFilter implements ContainerRequestFilter {
             return;
         }
 
+        LRAContextBuilder contextBuilder = new LRAContextBuilder();
+
         String lraHeader = ctx.getHeaderString(LRAClient.LRA_HTTP_HEADER);
         URL lraId = lraHeader != null ? new URL(lraHeader) : null;
-        ctx.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, new LRAContext(lraId));
+
         boolean shouldJoin = lra.join();
 
         switch (lra.value()) {
@@ -49,8 +54,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
              */
             case REQUIRED:
                 if (lraId == null) {
-                    lraId = lraClient.startLRA(resourceInfo.getResourceClass().getName(), 0L, TimeUnit.SECONDS);
-                    ctx.setProperty("lraContext", new LRAContext(lraId));
+                    lraId = lraClient.startLRA(resourceInfo.getResourceClass().getName(), getTimeLimit(), TimeUnit.SECONDS);
                 }
                 break;
 
@@ -112,7 +116,18 @@ public class LRARequestFilter implements ContainerRequestFilter {
             lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), uriInfo.getBaseUri(), null);
         }
 
-        ctx.setProperty(LRAClient.LRA_HTTP_HEADER, lraId);
+        ctx.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, new LRAContext(lraId));
+    }
+
+    private long getTimeLimit() {
+        TimeLimit timeLimit = resourceInfo.getResourceMethod().getAnnotation(TimeLimit.class);
+        if (timeLimit == null) timeLimit = resourceInfo.getResourceClass().getAnnotation(TimeLimit.class);
+
+        if (timeLimit == null) {
+            return LRAConstants.DEFAULT_TIMELIMIT;
+        }
+
+        return timeLimit.unit().toMillis(timeLimit.limit());
     }
 
 }
