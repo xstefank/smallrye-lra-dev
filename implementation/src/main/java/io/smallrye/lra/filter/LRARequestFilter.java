@@ -43,6 +43,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
         String lraHeader = ctx.getHeaderString(LRAClient.LRA_HTTP_HEADER);
         URL lraId = lraHeader != null ? new URL(lraHeader) : null;
+        contextBuilder.lraId(lraId);
 
         boolean shouldJoin = lra.join();
 
@@ -55,6 +56,8 @@ public class LRARequestFilter implements ContainerRequestFilter {
             case REQUIRED:
                 if (lraId == null) {
                     lraId = lraClient.startLRA(resourceInfo.getResourceClass().getName(), getTimeLimit(), TimeUnit.SECONDS);
+                    contextBuilder.lraId(lraId);
+                    contextBuilder.terminate(true);
                 }
                 break;
 
@@ -116,7 +119,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
             lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), uriInfo.getBaseUri(), null);
         }
 
-        ctx.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, new LRAContext(lraId));
+        ctx.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, contextBuilder.build());
     }
 
     private long getTimeLimit() {
