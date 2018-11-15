@@ -46,6 +46,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
         contextBuilder.lraId(lraId);
 
         boolean shouldJoin = lra.join();
+        boolean contextPresent = lraId != null;
 
         switch (lra.value()) {
             /**
@@ -54,10 +55,8 @@ public class LRARequestFilter implements ContainerRequestFilter {
              *  another JAX-RS filter will complete the LRA.
              */
             case REQUIRED:
-                if (lraId == null) {
-                    lraId = lraClient.startLRA(resourceInfo.getResourceClass().getName(), getTimeLimit(), TimeUnit.SECONDS);
-                    contextBuilder.lraId(lraId);
-                    contextBuilder.terminate(true);
+                if (!contextPresent) {
+                    lraId = startNewLRA(contextBuilder);
                 }
                 break;
 
@@ -72,6 +71,12 @@ public class LRARequestFilter implements ContainerRequestFilter {
                      *  one that was active on entry to the method.
                      */
             case REQUIRES_NEW:
+                if (!contextPresent) {
+                    lraId = startNewLRA(contextBuilder);
+                } else {
+                    contextBuilder.suspended(lraId);
+                    lraId = startNewLRA(contextBuilder);
+                }
                 break;
 
                     /**
@@ -120,6 +125,12 @@ public class LRARequestFilter implements ContainerRequestFilter {
         }
 
         ctx.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, contextBuilder.build());
+    }
+
+    private URL startNewLRA(LRAContextBuilder contextBuilder) {
+        URL lraId = lraClient.startLRA(resourceInfo.getResourceClass().getName(), getTimeLimit(), TimeUnit.SECONDS);
+        contextBuilder.lraId(lraId).newlyStarted(true);
+        return lraId;
     }
 
     private long getTimeLimit() {
