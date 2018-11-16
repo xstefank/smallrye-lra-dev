@@ -1,8 +1,11 @@
 package io.smallrye.lra.filter;
 
+import org.eclipse.microprofile.lra.client.GenericLRAException;
 import org.eclipse.microprofile.lra.client.LRAClient;
+import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
@@ -12,16 +15,32 @@ import java.io.IOException;
 @Provider
 public class LRAResponseFilter implements ContainerResponseFilter {
 
+    private static final Logger log = Logger.getLogger(LRAResponseFilter.class);
+
     @Inject
     private LRAClient lraClient;
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) throws IOException {
-        System.out.println("XXXXXXXXXXXXXXXXXXX");
         LRAContext lraContext = (LRAContext) containerRequestContext.getProperty(LRAContext.CONTEXT_PROPERTY_NAME);
-        System.out.println(lraContext);
-//        if (lraId != null) {
-//            lraClient.closeLRA(lraId);
-//        }
+
+        if (lraContext == null) {
+            // no LRA present
+            return;
+        }
+
+        if (lraContext.isNewlyStarted()) {
+            closeLRA(lraContext);
+        }
+    }
+
+    private void closeLRA(LRAContext lraContext) {
+        try {
+            lraClient.closeLRA(lraContext.getLraId());
+        } catch (NotFoundException e) {
+            log.infof("LRA %s is already closed", lraContext.getLraId());
+        } catch (GenericLRAException e) {
+            log.infof("Unable to close LRA %s; %s", lraContext.getLraId(), e.getCause().getMessage());
+        }
     }
 }

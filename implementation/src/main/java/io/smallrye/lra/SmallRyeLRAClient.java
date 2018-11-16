@@ -12,6 +12,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
@@ -96,11 +97,7 @@ public class SmallRyeLRAClient implements LRAClient {
 
         try {
             response = confirm ? coordinatorRESTClient.closeLRA(Utils.extractLraId(lraId)) :
-                                 coordinatorRESTClient.cancelLRA(Utils.extractLraId(lraId));
-
-            if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
-                throw new NotFoundException("Unable to find LRA: " + lraId);
-            }
+                    coordinatorRESTClient.cancelLRA(Utils.extractLraId(lraId));
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unexpected returned status code for LRA "
@@ -108,9 +105,8 @@ public class SmallRyeLRAClient implements LRAClient {
             }
 
             return response.readEntity(String.class);
-
-        } catch(Throwable t) {
-            throw new GenericLRAException(lraId, -1, "Unable to end LRA", t);
+        } catch (WebApplicationException t) {
+            throw new NotFoundException("Unable to find LRA: " + lraId);
         } finally {
             if (response != null) {
                 response.close();
@@ -137,7 +133,7 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
 
         try {
-            response = status == null ? coordinatorRESTClient.getAllLRAs() : coordinatorRESTClient.getAllLRAs(status);
+            response = status == null ? coordinatorRESTClient.getAllLRAs() : coordinatorRESTClient.getAllLRAs(status.asString());
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(null, response.getStatus(),

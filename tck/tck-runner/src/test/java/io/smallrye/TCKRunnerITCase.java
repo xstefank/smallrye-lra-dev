@@ -71,7 +71,6 @@ public class TCKRunnerITCase {
 
         while (!coordinatorUp || !tckClientUp) {
             try {
-                System.out.println("Trying to ping LRA coordinator and TCK client");
                 response = coordinatorTarget.request().get();
                 if (response.getStatus() == 200) coordinatorUp = true;
             } catch (ProcessingException e) {
@@ -89,7 +88,6 @@ public class TCKRunnerITCase {
         }
 
         response.close();
-        System.out.println("Successfully connected");
     }
 
     private void destroyProcess(Process process) throws InterruptedException {

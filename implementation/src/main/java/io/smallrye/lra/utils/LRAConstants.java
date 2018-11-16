@@ -13,7 +13,7 @@ public final class LRAConstants {
     public static final String PARENT_LRA_PARAM = "ParentLRA";
     public static final String LRA_ID_PATH_PARAM = "LraId";
     public static final String RECOVERY_ID_PATH_NAME = "RecoveryId";
-    public static final String STATUS = "status";
+    public static final String STATUS = "Status";
     public static final String TIMELIMIT = "TimeLimit";
 
     public static final String START = "/start";

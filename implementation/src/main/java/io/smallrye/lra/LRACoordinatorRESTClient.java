@@ -24,7 +24,7 @@ import static io.smallrye.lra.utils.LRAConstants.TIMELIMIT;
 @Path("/lra-coordinator")
 @RegisterRestClient
 public interface LRACoordinatorRESTClient {
-    
+
     @POST
     @Path("/start")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
@@ -40,7 +40,7 @@ public interface LRACoordinatorRESTClient {
     @GET
     @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    Response getAllLRAs(@QueryParam(STATUS) LRAStatus status);
+    Response getAllLRAs(@QueryParam(STATUS) String status);
 
     @PUT
     @Path("/{" + LRA_ID_PATH_PARAM + "}/close")
@@ -60,17 +60,17 @@ public interface LRACoordinatorRESTClient {
     @PUT
     @Path("/{" + LRA_ID_PATH_PARAM + "}")
     @Produces(MediaType.APPLICATION_JSON)
-    Response joinLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId, 
+    Response joinLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId,
                      @QueryParam(TIMELIMIT) @DefaultValue("0") Long timelimit,
                      @HeaderParam(LRAClient.LRA_HTTP_HEADER) String lraHeader,
                      @HeaderParam("Link") String linkHeader,
                      String compensatorData);
-    
+
     @DELETE
     @Path("/{" + LRA_ID_PATH_PARAM + "}/{" + RECOVERY_ID_PATH_NAME + "}")
     @Produces(MediaType.APPLICATION_JSON)
     Response leaveLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId, @PathParam(RECOVERY_ID_PATH_NAME) String recoveryId);
-    
+
     @PUT
     @Path("/{" + LRA_ID_PATH_PARAM + "}/timelimit")
     @Produces(MediaType.APPLICATION_JSON)
