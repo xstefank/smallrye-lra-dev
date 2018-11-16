@@ -7,10 +7,12 @@ import org.eclipse.microprofile.lra.annotation.TimeLimit;
 import org.eclipse.microprofile.lra.client.LRAClient;
 
 import javax.inject.Inject;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
@@ -31,7 +33,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
     private SmallRyeLRAClient lraClient;
 
     @Override
-    public void filter(ContainerRequestContext ctx) throws IOException {
+    public void filter(ContainerRequestContext requestContext) throws IOException {
         Method resourceMethod = resourceInfo.getResourceMethod();
         LRA lra = resourceMethod.getAnnotation(LRA.class);
 
@@ -39,14 +41,14 @@ public class LRARequestFilter implements ContainerRequestFilter {
             return;
         }
 
-        LRAContextBuilder contextBuilder = new LRAContextBuilder();
+        LRAContextBuilder lraContextBuilder = new LRAContextBuilder();
 
-        String lraHeader = ctx.getHeaderString(LRAClient.LRA_HTTP_HEADER);
+        String lraHeader = requestContext.getHeaderString(LRAClient.LRA_HTTP_HEADER);
         URL lraId = lraHeader != null ? new URL(lraHeader) : null;
-        contextBuilder.lraId(lraId);
+        lraContextBuilder.lraId(lraId);
 
         boolean shouldJoin = lra.join();
-        boolean contextPresent = lraId != null;
+        boolean lraContextPresent = lraId != null;
 
         switch (lra.value()) {
             /**
@@ -55,8 +57,8 @@ public class LRARequestFilter implements ContainerRequestFilter {
              *  another JAX-RS filter will complete the LRA.
              */
             case REQUIRED:
-                if (!contextPresent) {
-                    lraId = startNewLRA(contextBuilder);
+                if (!lraContextPresent) {
+                    lraId = startNewLRA(lraContextBuilder);
                 }
                 break;
 
@@ -71,11 +73,13 @@ public class LRARequestFilter implements ContainerRequestFilter {
                      *  one that was active on entry to the method.
                      */
             case REQUIRES_NEW:
-                if (!contextPresent) {
-                    lraId = startNewLRA(contextBuilder);
+                if (!lraContextPresent) {
+                    lraId = startNewLRA(lraContextBuilder);
                 } else {
-                    contextBuilder.suspended(lraId);
-                    lraId = startNewLRA(contextBuilder);
+                    lraContextBuilder.suspended(lraId);
+                    requestContext.getHeaders().remove(LRAClient.LRA_HTTP_HEADER);
+                    lraId = startNewLRA(lraContextBuilder);
+                    requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraId.toExternalForm());
                 }
                 break;
 
@@ -87,6 +91,12 @@ public class LRARequestFilter implements ContainerRequestFilter {
                      *  then continue within that context.
                      */
             case MANDATORY:
+                if (!lraContextPresent) {
+                    requestContext.abortWith(Response
+                            .status(Response.Status.PRECONDITION_FAILED)
+                            .entity(Entity.text("LRA type MANDATORY requires to be called inside of a LRA Context"))
+                            .build());
+                }
                 break;
 
                     /**
@@ -105,6 +115,12 @@ public class LRARequestFilter implements ContainerRequestFilter {
                      *  execution has completed.
                      */
             case NOT_SUPPORTED:
+                if (lraContextPresent) {
+                    lraContextBuilder.suspended(lraId);
+                    requestContext.getHeaders().remove(LRAClient.LRA_HTTP_HEADER);
+                    lraId = startNewLRA(lraContextBuilder);
+                    requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraId.toExternalForm());
+                }
                 break;
 
                     /**
@@ -116,6 +132,11 @@ public class LRARequestFilter implements ContainerRequestFilter {
                      *  to the caller.
                      */
             case NEVER:
+                if (lraContextPresent) {
+                    requestContext.abortWith(Response.status(Response.Status.PRECONDITION_FAILED)
+                            .entity(Entity.text("LRA type NEVER cannot be called inside of a LRA Context"))
+                            .build());
+                }
                 break;
 
         }
@@ -124,7 +145,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
             lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), uriInfo.getBaseUri(), null);
         }
 
-        ctx.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, contextBuilder.build());
+        requestContext.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, lraContextBuilder.build());
     }
 
     private URL startNewLRA(LRAContextBuilder contextBuilder) {
