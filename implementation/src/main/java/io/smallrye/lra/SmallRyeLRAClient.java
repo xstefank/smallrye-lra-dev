@@ -33,21 +33,21 @@ import java.util.concurrent.TimeUnit;
 public class SmallRyeLRAClient implements LRAClient {
 
     private static final Logger log = Logger.getLogger(SmallRyeLRAClient.class);
-    
+
     @Inject
     private LRACoordinatorRESTClient coordinatorRESTClient;
-    
+
     @Override
     public void close() {
-        
+
     }
 
     @Override
     public URL startLRA(URL parentLRA, String clientID, Long timeout, TimeUnit unit) throws GenericLRAException {
         Response response = null;
-        
+
         try {
-            response = coordinatorRESTClient.startLRA(parentLRA != null ? Utils.extractLraId(parentLRA) : null, 
+            response = coordinatorRESTClient.startLRA(parentLRA != null ? Utils.extractLraId(parentLRA) : null,
                     clientID, unit.toMillis(timeout));
 
             if (parentLRA != null && response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
@@ -60,7 +60,7 @@ public class SmallRyeLRAClient implements LRAClient {
             }
 
             return new URL(response.getHeaderString(LRAClient.LRA_HTTP_HEADER));
-            
+
         } catch (MalformedURLException e) {
             throw new GenericLRAException(null, response.getStatus(),
                     "Unable to start LRA for " + Utils.getFormattedString(parentLRA, clientID, timeout, unit), e);
@@ -69,6 +69,10 @@ public class SmallRyeLRAClient implements LRAClient {
                 response.close();
             }
         }
+    }
+
+    public URL startLRA(String clientId, Long timeout) {
+        return startLRA(clientId, timeout, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -91,7 +95,7 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
 
         try {
-            response = confirm ? coordinatorRESTClient.closeLRA(Utils.extractLraId(lraId)) : 
+            response = confirm ? coordinatorRESTClient.closeLRA(Utils.extractLraId(lraId)) :
                                  coordinatorRESTClient.cancelLRA(Utils.extractLraId(lraId));
 
             if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
@@ -99,7 +103,7 @@ public class SmallRyeLRAClient implements LRAClient {
             }
 
             if (isInvalidResponse(response)) {
-                throw new GenericLRAException(lraId, response.getStatus(), "Unexpected returned status code for LRA " 
+                throw new GenericLRAException(lraId, response.getStatus(), "Unexpected returned status code for LRA "
                         + (confirm ? "confirmation" : "compensation"), null);
             }
 
@@ -195,11 +199,11 @@ public class SmallRyeLRAClient implements LRAClient {
     public String joinLRA(URL lraId, Long timelimit, URL compensateUrl, URL completeUrl, URL forgetUrl, URL leaveUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
         Objects.requireNonNull(lraId);
         Response response = null;
-        
+
         try {
             String linkHeader = createLinkHeader(compensateUrl, completeUrl, forgetUrl, leaveUrl, statusUrl);
             System.out.println("YYYYYYYYYYYYYY " + linkHeader);
-            response = coordinatorRESTClient.joinLRA(Utils.extractLraId(lraId), timelimit, 
+            response = coordinatorRESTClient.joinLRA(Utils.extractLraId(lraId), timelimit,
                     lraId.toString(),
                     linkHeader,
                    compensatorData);
@@ -218,7 +222,7 @@ public class SmallRyeLRAClient implements LRAClient {
 
     private String createLinkHeader(URL compensateUrl, URL completeUrl, URL forgetUrl, URL leaveUrl, URL statusUrl) {
         StringBuilder sb = new StringBuilder();
-        
+
         sb.append(createLink("compensate", compensateUrl)).append(",")
                 .append(createLink("complete", completeUrl)).append(",")
                 .append(createLink("forget", forgetUrl)).append(",")
@@ -236,7 +240,7 @@ public class SmallRyeLRAClient implements LRAClient {
     public String joinLRA(URL lraId, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
         try {
             LRAResource resource = new LRAResource(resourceClass, baseUri);
-            return joinLRA(lraId, 0L, 
+            return joinLRA(lraId, 0L,
                     resource.getCompensateUri().toURL(),
                     resource.getCompleteUri().toURL(),
                     resource.getForgetUri().toURL(),
@@ -245,14 +249,14 @@ public class SmallRyeLRAClient implements LRAClient {
                     compensatorData);
         } catch (IllegalArgumentException | MalformedURLException e) {
             throw new GenericLRAException(lraId, -1, e.getMessage(), e);
-        } 
+        }
     }
 
     @Override
     public URL updateCompensator(URL recoveryUrl, URL compensateUrl, URL completeUrl, URL forgetUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
         Objects.requireNonNull(recoveryUrl);
         Response response = null;
-        
+
         try {
             response = buildCompensatorRequest(recoveryUrl)
                     .put(Entity.json(new ParticipantDefinition(completeUrl, compensateUrl, forgetUrl,
@@ -261,7 +265,7 @@ public class SmallRyeLRAClient implements LRAClient {
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(recoveryUrl, response.getStatus(), "Unable to update LRA participant", null);
             }
-            
+
             return new URL(response.readEntity(String.class));
         } catch (MalformedURLException e) {
             throw new GenericLRAException(recoveryUrl, response.getStatus(), "Invalid response for participant update", e);
@@ -275,7 +279,7 @@ public class SmallRyeLRAClient implements LRAClient {
         Objects.requireNonNull(lraId);
         Objects.requireNonNull(body);
         Response response = null;
-        
+
         try {
             response = coordinatorRESTClient.leaveLRA(Utils.extractLraId(lraId), body);
 
@@ -291,7 +295,7 @@ public class SmallRyeLRAClient implements LRAClient {
     public void renewTimeLimit(URL lraId, long limit, TimeUnit unit) {
         Objects.requireNonNull(lraId);
         Response response = null;
-        
+
         try {
             response = coordinatorRESTClient.renewTimeLimit(Utils.extractLraId(lraId), unit.toMillis(limit));
 
@@ -308,7 +312,7 @@ public class SmallRyeLRAClient implements LRAClient {
         //TODO programatic API
         return null;
     }
-    
+
     private Invocation.Builder buildCompensatorRequest(URL recoveryUrl) {
         return ClientBuilder.newClient()
                 .target(recoveryUrl.toString())
@@ -318,7 +322,7 @@ public class SmallRyeLRAClient implements LRAClient {
     private boolean hasStatusCodeIn(Response response, Response.Status... statuses) {
         return Arrays.stream(statuses).anyMatch(s -> s.getStatusCode() == response.getStatus());
     }
-    
+
     private boolean isInvalidResponse(Response response) {
         return response.getStatus() != Response.Status.OK.getStatusCode();
     }

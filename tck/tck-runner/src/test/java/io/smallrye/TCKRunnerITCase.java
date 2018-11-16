@@ -43,7 +43,7 @@ public class TCKRunnerITCase {
         waitForTCK();
 
         System.out.println("Executing TCK run...");
-        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/joinLRAViaHeader");
+        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/timeLimit");
         Response response = target.request().put(null);
 
         destroyProcess(coordinatorProcess);
@@ -59,7 +59,7 @@ public class TCKRunnerITCase {
     }
 
     private void waitForTCK() throws InterruptedException {
-        Thread.sleep(3000);
+        Thread.sleep(5000);
 
         Client client = ClientBuilder.newClient();
         WebTarget coordinatorTarget = client.target("http://localhost:8080/lra-coordinator");

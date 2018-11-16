@@ -13,7 +13,6 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -25,9 +24,6 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
     @Context
     private ResourceInfo resourceInfo;
-
-    @Context
-    private UriInfo uriInfo;
 
     @Inject
     private SmallRyeLRAClient lraClient;
@@ -58,7 +54,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
              */
             case REQUIRED:
                 if (!lraContextPresent) {
-                    lraId = startNewLRA(lraContextBuilder);
+                    lraId = startNewLRA(lraContextBuilder, requestContext);
                 }
                 break;
 
@@ -74,11 +70,11 @@ public class LRARequestFilter implements ContainerRequestFilter {
                      */
             case REQUIRES_NEW:
                 if (!lraContextPresent) {
-                    lraId = startNewLRA(lraContextBuilder);
+                    lraId = startNewLRA(lraContextBuilder, requestContext);
                 } else {
                     lraContextBuilder.suspended(lraId);
                     requestContext.getHeaders().remove(LRAClient.LRA_HTTP_HEADER);
-                    lraId = startNewLRA(lraContextBuilder);
+                    lraId = startNewLRA(lraContextBuilder, requestContext);
                     requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraId.toExternalForm());
                 }
                 break;
@@ -118,7 +114,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
                 if (lraContextPresent) {
                     lraContextBuilder.suspended(lraId);
                     requestContext.getHeaders().remove(LRAClient.LRA_HTTP_HEADER);
-                    lraId = startNewLRA(lraContextBuilder);
+                    lraId = startNewLRA(lraContextBuilder, requestContext);
                     requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraId.toExternalForm());
                 }
                 break;
@@ -142,15 +138,16 @@ public class LRARequestFilter implements ContainerRequestFilter {
         }
 
         if (shouldJoin && lraId != null) {
-            lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), uriInfo.getBaseUri(), null);
+            lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), requestContext.getUriInfo().getBaseUri(), null);
         }
 
         requestContext.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, lraContextBuilder.build());
     }
 
-    private URL startNewLRA(LRAContextBuilder contextBuilder) {
-        URL lraId = lraClient.startLRA(resourceInfo.getResourceClass().getName(), getTimeLimit(), TimeUnit.SECONDS);
+    private URL startNewLRA(LRAContextBuilder contextBuilder, ContainerRequestContext requestContext) {
+        URL lraId = lraClient.startLRA(resourceInfo.getResourceClass().getName(), getTimeLimit());
         contextBuilder.lraId(lraId).newlyStarted(true);
+        requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraId.toExternalForm());
         return lraId;
     }
 
