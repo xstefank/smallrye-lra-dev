@@ -6,6 +6,8 @@ import javax.json.Json;
 import javax.json.JsonReader;
 import javax.json.JsonWriter;
 import javax.json.spi.JsonProvider;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
@@ -37,7 +39,8 @@ public class TCKRunnerITCase {
         TCKClientPb.directory(new File("../tck-client/target"));
         System.out.println("Starting LRA TCK client...");
         Process TCKClientProcess = TCKClientPb.start();
-        Thread.sleep(20000);
+
+        waitForTCK();
 
         System.out.println("Executing TCK run...");
         WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/joinLRAViaHeader");
@@ -53,6 +56,40 @@ public class TCKRunnerITCase {
                 writer.write(reader.read());
             }
         }
+    }
+
+    private void waitForTCK() throws InterruptedException {
+        Thread.sleep(3000);
+
+        Client client = ClientBuilder.newClient();
+        WebTarget coordinatorTarget = client.target("http://localhost:8080/lra-coordinator");
+        WebTarget tckTarget = client.target("http://localhost:8180/ping");
+
+        boolean coordinatorUp = false;
+        boolean tckClientUp = false;
+        Response response = null;
+
+        while (!coordinatorUp || !tckClientUp) {
+            try {
+                System.out.println("Trying to ping LRA coordinator and TCK client");
+                response = coordinatorTarget.request().get();
+                if (response.getStatus() == 200) coordinatorUp = true;
+            } catch (ProcessingException e) {
+                // ok
+            }
+
+            try {
+                response = tckTarget.request().get();
+                if (response.getStatus() == 200) tckClientUp = true;
+            } catch (ProcessingException e) {
+                // ok
+            }
+
+            Thread.sleep(1000);
+        }
+
+        response.close();
+        System.out.println("Successfully connected");
     }
 
     private void destroyProcess(Process process) throws InterruptedException {
