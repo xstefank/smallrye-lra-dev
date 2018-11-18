@@ -42,6 +42,11 @@ public interface LRACoordinatorRESTClient {
     @Produces(MediaType.APPLICATION_JSON)
     Response getAllLRAs(@QueryParam(STATUS) String status);
 
+    @GET
+    @Path("/status/{" + LRA_ID_PATH_PARAM + "}")
+    @Produces(MediaType.APPLICATION_JSON)
+    Response isActiveLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId);
+
     @PUT
     @Path("/{" + LRA_ID_PATH_PARAM + "}/close")
     @Produces(MediaType.APPLICATION_JSON)

@@ -174,7 +174,16 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public Boolean isActiveLRA(URL lraId) throws GenericLRAException {
-        return isCompensatorStatusIn(getStatus(lraId).orElseGet(() -> null), CompensatorStatus.Completing, CompensatorStatus.Compensating);
+        Objects.requireNonNull(lraId);
+        Response response = null;
+        
+        try {
+            response = coordinatorRESTClient.isActiveLRA(Utils.extractLraId(lraId));
+            
+            return response.getStatus() == Response.Status.OK.getStatusCode();
+        } finally {
+            if (response != null) response.close();
+        }
     }
 
     private Boolean isCompensatorStatusIn(CompensatorStatus actual, CompensatorStatus... expected) {
