@@ -116,7 +116,7 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public List<LRAInfo> getActiveLRAs() throws GenericLRAException {
-        return getLRAs(LRAStatus.ACTIVE);
+        return getLRAs(null);
     }
 
     @Override
