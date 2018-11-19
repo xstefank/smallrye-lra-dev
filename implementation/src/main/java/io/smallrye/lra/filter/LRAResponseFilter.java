@@ -28,9 +28,7 @@ public class LRAResponseFilter implements ContainerResponseFilter {
             // no LRA present
             return;
         }
-
-        responseContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraContext.getLraId());
-
+        
         if (lraContext.isNewlyStarted()) {
             closeLRA(lraContext);
         }
