@@ -21,16 +21,22 @@ public class LRAResponseFilter implements ContainerResponseFilter {
     private LRAClient lraClient;
 
     @Override
-    public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) throws IOException {
-        LRAContext lraContext = (LRAContext) containerRequestContext.getProperty(LRAContext.CONTEXT_PROPERTY_NAME);
+    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+        LRAContext lraContext = (LRAContext) requestContext.getProperty(LRAContext.CONTEXT_PROPERTY_NAME);
 
         if (lraContext == null) {
             // no LRA present
             return;
         }
 
+        responseContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraContext.getLraId());
+
         if (lraContext.isNewlyStarted()) {
             closeLRA(lraContext);
+        }
+
+        if (lraContext.getSuspendedLRA() != null) {
+            responseContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraContext.getSuspendedLRA());
         }
     }
 

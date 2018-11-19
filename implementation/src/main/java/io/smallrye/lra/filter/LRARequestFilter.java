@@ -3,6 +3,7 @@ package io.smallrye.lra.filter;
 import io.smallrye.lra.SmallRyeLRAClient;
 import io.smallrye.lra.utils.LRAConstants;
 import org.eclipse.microprofile.lra.annotation.LRA;
+import org.eclipse.microprofile.lra.annotation.NestedLRA;
 import org.eclipse.microprofile.lra.annotation.TimeLimit;
 import org.eclipse.microprofile.lra.client.LRAClient;
 
@@ -17,7 +18,6 @@ import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
 
 @Provider
 public class LRARequestFilter implements ContainerRequestFilter {
@@ -43,8 +43,23 @@ public class LRARequestFilter implements ContainerRequestFilter {
         URL lraId = lraHeader != null ? new URL(lraHeader) : null;
         lraContextBuilder.lraId(lraId);
 
-        boolean shouldJoin = lra.join();
+        boolean nested = resourceMethod.getAnnotation(NestedLRA.class) != null;
+
         boolean lraContextPresent = lraId != null;
+        
+        /*
+         <li>REQUIRED if there is an LRA present a new LRA is nested under it
+ *   <li>REQUIRES_NEW the @NestedLRA annotation is ignored
+ *   <li>MANDATORY a new LRA is nested under the incoming LRA
+ *   <li>SUPPORTS if there is an LRA present a new LRA is nested under otherwise
+ *   a new top level LRA is begun
+ *   <li>NOT_SUPPORTED nested does not make sense and operations on this resource
+ *   that contain a LRA context will immediately return with a
+ *   <code>412 Precondition Failed</code> HTTP status code
+ *   <li>NEVER nested does not make sense and requests that carry a LRA context
+ *   will immediately return with a <code>412 Precondition Failed</code> HTTP
+ *   status code
+         */
 
         switch (lra.value()) {
             /**
@@ -52,9 +67,12 @@ public class LRARequestFilter implements ContainerRequestFilter {
              *  LRA for the duration of the method call and when the call completes
              *  another JAX-RS filter will complete the LRA.
              */
+            //<li>REQUIRED if there is an LRA present a new LRA is nested under it
             case REQUIRED:
                 if (!lraContextPresent) {
                     lraId = startNewLRA(lraContextBuilder, requestContext);
+                } else if (nested) {
+                    lraId = startNewLRA(lraId, lraContextBuilder, requestContext);
                 }
                 break;
 
@@ -68,11 +86,12 @@ public class LRARequestFilter implements ContainerRequestFilter {
                      *  completes another JAX-RS filter will complete the LRA and resume the
                      *  one that was active on entry to the method.
                      */
+                    //<li>REQUIRES_NEW the @NestedLRA annotation is ignored
             case REQUIRES_NEW:
                 if (!lraContextPresent) {
                     lraId = startNewLRA(lraContextBuilder, requestContext);
                 } else {
-                    lraContextBuilder.suspended(lraId);
+                    lraContextBuilder.suspend(lraId);
                     requestContext.getHeaders().remove(LRAClient.LRA_HTTP_HEADER);
                     lraId = startNewLRA(lraContextBuilder, requestContext);
                     requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraId.toExternalForm());
@@ -86,12 +105,15 @@ public class LRARequestFilter implements ContainerRequestFilter {
                      *  If called inside a transaction context the bean method execution will
                      *  then continue within that context.
                      */
+                    //<li>MANDATORY a new LRA is nested under the incoming LRA
             case MANDATORY:
                 if (!lraContextPresent) {
                     requestContext.abortWith(Response
                             .status(Response.Status.PRECONDITION_FAILED)
                             .entity(Entity.text("LRA type MANDATORY requires to be called inside of a LRA Context"))
                             .build());
+                } else if (nested) {
+                    lraId = startNewLRA(lraId, lraContextBuilder, requestContext);
                 }
                 break;
 
@@ -102,20 +124,31 @@ public class LRARequestFilter implements ContainerRequestFilter {
                      *  If called inside a LRA context the managed bean method execution
                      *  must then continue inside this LRA context.
                      */
+                    //<li>SUPPORTS if there is an LRA present a new LRA is nested under otherwise
+                    // a new top level LRA is begun
             case SUPPORTS:
+                if (nested) {
+                    if (lraContextPresent) {
+                        lraId = startNewLRA(lraId, lraContextBuilder, requestContext);
+                    } else {
+                        lraId = startNewLRA(lraContextBuilder, requestContext);
+                    }
+                }
                 break;
 
                     /**
                      *  The bean method is executed without a LRA context. If a context is
-                     *  present on entry then it is suspended and then resumed after the
+                     *  present on entry then it is suspend and then resumed after the
                      *  execution has completed.
                      */
+                    //<li>NOT_SUPPORTED nested does not make sense and operations on this resource
+                    // *   that contain a LRA context will immediately return with a
+                    // *   <code>412 Precondition Failed</code> HTTP status code
             case NOT_SUPPORTED:
                 if (lraContextPresent) {
-                    lraContextBuilder.suspended(lraId);
+                    lraContextBuilder.suspend(lraId);
                     requestContext.getHeaders().remove(LRAClient.LRA_HTTP_HEADER);
                     lraId = startNewLRA(lraContextBuilder, requestContext);
-                    requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraId.toExternalForm());
                 }
                 break;
 
@@ -127,6 +160,9 @@ public class LRARequestFilter implements ContainerRequestFilter {
                      *  <code>412 Precondition Failed</code> HTTP status code is returned
                      *  to the caller.
                      */
+                    //<li>NEVER nested does not make sense and requests that carry a LRA context
+                    // *   will immediately return with a <code>412 Precondition Failed</code> HTTP
+                    // *   status code
             case NEVER:
                 if (lraContextPresent) {
                     requestContext.abortWith(Response.status(Response.Status.PRECONDITION_FAILED)
@@ -137,7 +173,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
         }
 
-        if (shouldJoin && lraId != null) {
+        if (lra.join() && lraId != null) {
             lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), requestContext.getUriInfo().getBaseUri(), null);
         }
 
@@ -145,10 +181,21 @@ public class LRARequestFilter implements ContainerRequestFilter {
     }
 
     private URL startNewLRA(LRAContextBuilder contextBuilder, ContainerRequestContext requestContext) {
-        URL lraId = lraClient.startLRA(resourceInfo.getResourceClass().getName(), getTimeLimit());
-        contextBuilder.lraId(lraId).newlyStarted(true);
-        requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraId.toExternalForm());
+        return startNewLRA(null, contextBuilder, requestContext);
+    }
+
+    private URL startNewLRA(URL parentLRA, LRAContextBuilder lraContextBuilder, ContainerRequestContext requestContext) {
+        if (parentLRA != null) {
+            lraContextBuilder.suspend(parentLRA);
+        }
+        URL lraId = lraClient.startLRA(parentLRA, resourceInfo.getResourceClass().getName(), getTimeLimit());
+        updateContexts(lraId, lraContextBuilder, requestContext);
         return lraId;
+    }
+
+    private void updateContexts(URL lraId, LRAContextBuilder lraContextBuilder, ContainerRequestContext requestContext) {
+        lraContextBuilder.lraId(lraId).newlyStarted(true);
+        requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraId.toExternalForm());
     }
 
     private long getTimeLimit() {

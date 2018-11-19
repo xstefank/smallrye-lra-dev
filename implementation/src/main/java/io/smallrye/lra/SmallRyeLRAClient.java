@@ -43,12 +43,16 @@ public class SmallRyeLRAClient implements LRAClient {
 
     }
 
+    public URL startLRA(URL parentLRA, String clientID, Long timeout) {
+        return startLRA(parentLRA, clientID, timeout, TimeUnit.MILLISECONDS);
+    }
+
     @Override
     public URL startLRA(URL parentLRA, String clientID, Long timeout, TimeUnit unit) throws GenericLRAException {
         Response response = null;
 
         try {
-            response = coordinatorRESTClient.startLRA(parentLRA != null ? Utils.extractLraId(parentLRA) : null,
+            response = coordinatorRESTClient.startLRA(parentLRA != null ? parentLRA.toExternalForm() : null,
                     clientID, unit.toMillis(timeout));
 
             if (parentLRA != null && response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {

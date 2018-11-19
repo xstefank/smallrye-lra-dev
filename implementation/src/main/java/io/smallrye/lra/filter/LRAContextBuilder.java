@@ -18,7 +18,7 @@ public class LRAContextBuilder {
         return this;
     }
 
-    public LRAContextBuilder suspended(URL lraId) {
+    public LRAContextBuilder suspend(URL lraId) {
         this.suspendedLRA = lraId;
         return this;
     }
