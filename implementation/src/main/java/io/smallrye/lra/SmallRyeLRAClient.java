@@ -210,7 +210,7 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
 
         try {
-            String linkHeader = createLinkHeader(compensateUrl, completeUrl, forgetUrl, leaveUrl, statusUrl);
+            String linkHeader = new LRAResource(compensateUrl, completeUrl, statusUrl, forgetUrl, leaveUrl).asLinkHeader();
             System.out.println("YYYYYYYYYYYYYY " + linkHeader);
             response = coordinatorRESTClient.joinLRA(Utils.extractLraId(lraId), timelimit,
                     lraId.toString(),
@@ -227,22 +227,6 @@ public class SmallRyeLRAClient implements LRAClient {
         } finally {
             if (response != null) response.close();
         }
-    }
-
-    private String createLinkHeader(URL compensateUrl, URL completeUrl, URL forgetUrl, URL leaveUrl, URL statusUrl) {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(createLink("compensate", compensateUrl)).append(",")
-                .append(createLink("complete", completeUrl)).append(",")
-                .append(createLink("forget", forgetUrl)).append(",")
-                .append(createLink("leave", leaveUrl)).append(",")
-                .append(createLink("status", statusUrl));
-
-        return sb.toString();
-    }
-
-    private Link createLink(String kind, URL url) {
-        return Link.fromUri(url.toExternalForm()).title(kind + "URI").rel(kind).type(MediaType.TEXT_PLAIN).build();
     }
 
     @Override
@@ -280,6 +264,15 @@ public class SmallRyeLRAClient implements LRAClient {
             throw new GenericLRAException(recoveryUrl, response.getStatus(), "Invalid response for participant update", e);
         } finally {
             if (response != null) response.close();
+        }
+    }
+
+    public void leaveLRA(URL lraId, Class<?> resourceClass, URI baseUri) throws GenericLRAException {
+        LRAResource lraResource = new LRAResource(resourceClass, baseUri);
+        try {
+            leaveLRA(lraId, lraResource.asLinkHeader());
+        } catch (MalformedURLException e) {
+            throw new GenericLRAException(lraId, -1, "Invalid urls produced by resource class", e);
         }
     }
 

@@ -3,6 +3,7 @@ package io.smallrye.lra.filter;
 import io.smallrye.lra.SmallRyeLRAClient;
 import io.smallrye.lra.utils.LRAConstants;
 import org.eclipse.microprofile.lra.annotation.LRA;
+import org.eclipse.microprofile.lra.annotation.Leave;
 import org.eclipse.microprofile.lra.annotation.NestedLRA;
 import org.eclipse.microprofile.lra.annotation.TimeLimit;
 import org.eclipse.microprofile.lra.client.LRAClient;
@@ -31,36 +32,23 @@ public class LRARequestFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         Method resourceMethod = resourceInfo.getResourceMethod();
-        LRA lra = resourceMethod.getAnnotation(LRA.class);
-
-        if (lra == null) {
-            return;
-        }
-
         LRAContextBuilder lraContextBuilder = new LRAContextBuilder();
 
         String lraHeader = requestContext.getHeaderString(LRAClient.LRA_HTTP_HEADER);
         URL lraId = lraHeader != null ? new URL(lraHeader) : null;
         lraContextBuilder.lraId(lraId);
 
+        LRA lra = resourceMethod.getAnnotation(LRA.class);
+
+        if (lra == null) {
+            processHelperLRAAnnotations(lraId, requestContext);
+            return;
+        }
+        
         boolean nested = resourceMethod.getAnnotation(NestedLRA.class) != null;
 
         boolean lraContextPresent = lraId != null;
         
-        /*
-         <li>REQUIRED if there is an LRA present a new LRA is nested under it
- *   <li>REQUIRES_NEW the @NestedLRA annotation is ignored
- *   <li>MANDATORY a new LRA is nested under the incoming LRA
- *   <li>SUPPORTS if there is an LRA present a new LRA is nested under otherwise
- *   a new top level LRA is begun
- *   <li>NOT_SUPPORTED nested does not make sense and operations on this resource
- *   that contain a LRA context will immediately return with a
- *   <code>412 Precondition Failed</code> HTTP status code
- *   <li>NEVER nested does not make sense and requests that carry a LRA context
- *   will immediately return with a <code>412 Precondition Failed</code> HTTP
- *   status code
-         */
-
         switch (lra.value()) {
             /**
              *  If called outside a LRA context a JAX-RS filter will begin a new
@@ -178,6 +166,12 @@ public class LRARequestFilter implements ContainerRequestFilter {
         }
 
         requestContext.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, lraContextBuilder.build());
+    }
+
+    private void processHelperLRAAnnotations(URL lraId, ContainerRequestContext requestContext) {
+        if (resourceInfo.getResourceMethod().isAnnotationPresent(Leave.class)) {
+            lraClient.leaveLRA(lraId, resourceInfo.getResourceClass(), requestContext.getUriInfo().getBaseUri());
+        }
     }
 
     private URL startNewLRA(LRAContextBuilder contextBuilder, ContainerRequestContext requestContext) {

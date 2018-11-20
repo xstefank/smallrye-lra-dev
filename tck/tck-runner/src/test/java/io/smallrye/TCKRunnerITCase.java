@@ -43,7 +43,7 @@ public class TCKRunnerITCase {
         waitForTCK();
 
         System.out.println("Executing TCK run...");
-        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/all");
+        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/leaveLRA");
         Response response = target.request().put(null);
 
         destroyProcess(coordinatorProcess);
