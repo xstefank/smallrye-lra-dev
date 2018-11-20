@@ -71,10 +71,10 @@ public interface LRACoordinatorRESTClient {
                      @HeaderParam("Link") String linkHeader,
                      String compensatorData);
 
-    @DELETE
-    @Path("/{" + LRA_ID_PATH_PARAM + "}/{" + RECOVERY_ID_PATH_NAME + "}")
+    @PUT
+    @Path("/{" + LRA_ID_PATH_PARAM + "}/remove")
     @Produces(MediaType.APPLICATION_JSON)
-    Response leaveLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId, @PathParam(RECOVERY_ID_PATH_NAME) String recoveryId);
+    Response leaveLRA(@PathParam(LRA_ID_PATH_PARAM) String lraId, String body);
 
     @PUT
     @Path("/{" + LRA_ID_PATH_PARAM + "}/timelimit")

@@ -291,6 +291,15 @@ public class SmallRyeLRAClient implements LRAClient {
 
         try {
             response = coordinatorRESTClient.leaveLRA(Utils.extractLraId(lraId), body);
+            
+            if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+                throw new NotFoundException("Unable to leave LRA: " + lraId);
+            }
+
+            if (response.getStatus() == Response.Status.PRECONDITION_FAILED.getStatusCode()) {
+                throw new GenericLRAException(lraId, response.getStatus(),
+                        "Unable to leave LRA because it is probably already completed or compensated", null);
+            }
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(lraId, response.getStatus(), "Participant " + body + "is cannotleave LRA", null);
