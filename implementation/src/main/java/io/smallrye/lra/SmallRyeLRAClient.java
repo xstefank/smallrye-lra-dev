@@ -8,7 +8,7 @@ import org.eclipse.microprofile.lra.client.LRAClient;
 import org.eclipse.microprofile.lra.client.LRAInfo;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ProcessingException;
@@ -17,7 +17,6 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
@@ -30,10 +29,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-@ApplicationScoped
+@RequestScoped
 public class SmallRyeLRAClient implements LRAClient {
 
     private static final Logger log = Logger.getLogger(SmallRyeLRAClient.class);
+    private URL currentLRA;
 
     @Inject
     private LRACoordinatorRESTClient coordinatorRESTClient;
@@ -64,7 +64,8 @@ public class SmallRyeLRAClient implements LRAClient {
                         "Unexpected return code of LRA start for" + Utils.getFormattedString(parentLRA, clientID, timeout, unit), null);
             }
 
-            return new URL(response.getHeaderString(LRAClient.LRA_HTTP_HEADER));
+            currentLRA = new URL(response.getHeaderString(LRAClient.LRA_HTTP_HEADER));
+            return currentLRA;
 
         } catch (MalformedURLException e) {
             throw new GenericLRAException(null, response.getStatus(),
@@ -211,7 +212,6 @@ public class SmallRyeLRAClient implements LRAClient {
 
         try {
             String linkHeader = new LRAResource(compensateUrl, completeUrl, statusUrl, forgetUrl, leaveUrl).asLinkHeader();
-            System.out.println("YYYYYYYYYYYYYY " + linkHeader);
             response = coordinatorRESTClient.joinLRA(Utils.extractLraId(lraId), timelimit,
                     lraId.toString(),
                     linkHeader,
@@ -320,8 +320,7 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public URL getCurrent() {
-        //TODO programatic API
-        return null;
+        return currentLRA;
     }
 
     private Invocation.Builder buildCompensatorRequest(URL recoveryUrl) {
