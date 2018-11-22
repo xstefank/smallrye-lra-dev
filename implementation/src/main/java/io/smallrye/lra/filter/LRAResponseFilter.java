@@ -28,16 +28,20 @@ public class LRAResponseFilter implements ContainerResponseFilter {
         if (lraClient.getCurrent() != null) {
             responseContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraClient.getCurrent());
         }
-        
+
         LRAContext lraContext = (LRAContext) requestContext.getProperty(LRAContext.CONTEXT_PROPERTY_NAME);
 
         if (lraContext == null) {
             // no LRA present
             return;
         }
-        
+
         if (lraContext.isNewlyStarted()) {
             endLRA(lraContext, true);
+        }
+
+        if (lraContext.getCancelOnFamily() != null && hasFamilyIn(responseContext, lraContext.getCancelOnFamily())) {
+            endLRA(lraContext, false);
         }
 
         if (lraContext.getCancelOn() != null && hasStatusIn(responseContext, lraContext.getCancelOn())) {
@@ -47,6 +51,10 @@ public class LRAResponseFilter implements ContainerResponseFilter {
         if (lraContext.getSuspendedLRA() != null) {
             responseContext.getHeaders().putSingle(LRAClient.LRA_HTTP_HEADER, lraContext.getSuspendedLRA());
         }
+    }
+
+    private boolean hasFamilyIn(ContainerResponseContext responseContext, Response.Status.Family[] families) {
+        return Arrays.stream(families).anyMatch(family -> family.equals(responseContext.getStatusInfo().getFamily()));
     }
 
     private boolean hasStatusIn(ContainerResponseContext responseContext, Response.Status[] cancelOn) {

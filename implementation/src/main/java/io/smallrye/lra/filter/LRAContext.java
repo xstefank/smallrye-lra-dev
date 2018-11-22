@@ -11,12 +11,14 @@ public class LRAContext {
     private boolean newlyStarted;
     private URL suspendedLRA;
     private Response.Status[] cancelOn;
+    private Response.Status.Family[] cancelOnFamily;
 
-    public LRAContext(URL lraId, boolean newlyStarted, URL suspendedLRA, Response.Status[] cancelOn) {
+    public LRAContext(URL lraId, boolean newlyStarted, URL suspendedLRA, Response.Status[] cancelOn, Response.Status.Family[] cancelOnFamily) {
         this.lraId = lraId;
         this.newlyStarted = newlyStarted;
         this.suspendedLRA = suspendedLRA;
         this.cancelOn = cancelOn;
+        this.cancelOnFamily = cancelOnFamily;
     }
 
     public URL getLraId() {
@@ -33,5 +35,9 @@ public class LRAContext {
 
     public Response.Status[] getCancelOn() {
         return cancelOn;
+    }
+
+    public Response.Status.Family[] getCancelOnFamily() {
+        return cancelOnFamily;
     }
 }

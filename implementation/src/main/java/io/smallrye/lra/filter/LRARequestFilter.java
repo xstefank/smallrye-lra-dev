@@ -166,6 +166,10 @@ public class LRARequestFilter implements ContainerRequestFilter {
             lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), requestContext.getUriInfo().getBaseUri(), null);
         }
 
+        if (lra.cancelOnFamily().length != 0) {
+            lraContextBuilder.cancelOnFamily(lra.cancelOnFamily());
+        }
+
         if (lra.cancelOn().length != 0) {
             lraContextBuilder.cancelOn(lra.cancelOn());
         }
