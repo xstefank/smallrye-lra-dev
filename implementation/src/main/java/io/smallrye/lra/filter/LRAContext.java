@@ -1,5 +1,6 @@
 package io.smallrye.lra.filter;
 
+import javax.ws.rs.core.Response;
 import java.net.URL;
 
 public class LRAContext {
@@ -9,11 +10,13 @@ public class LRAContext {
     private URL lraId;
     private boolean newlyStarted;
     private URL suspendedLRA;
+    private Response.Status[] cancelOn;
 
-    public LRAContext(URL lraId, boolean newlyStarted, URL suspendedLRA) {
+    public LRAContext(URL lraId, boolean newlyStarted, URL suspendedLRA, Response.Status[] cancelOn) {
         this.lraId = lraId;
         this.newlyStarted = newlyStarted;
         this.suspendedLRA = suspendedLRA;
+        this.cancelOn = cancelOn;
     }
 
     public URL getLraId() {
@@ -26,5 +29,9 @@ public class LRAContext {
 
     public URL getSuspendedLRA() {
         return suspendedLRA;
+    }
+
+    public Response.Status[] getCancelOn() {
+        return cancelOn;
     }
 }

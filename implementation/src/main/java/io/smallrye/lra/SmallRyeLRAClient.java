@@ -186,6 +186,8 @@ public class SmallRyeLRAClient implements LRAClient {
             response = coordinatorRESTClient.isActiveLRA(Utils.extractLraId(lraId));
             
             return response.getStatus() == Response.Status.OK.getStatusCode();
+        } catch (WebApplicationException e) {
+            return false;
         } finally {
             if (response != null) response.close();
         }

@@ -19,6 +19,7 @@ import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.Arrays;
 
 @Provider
 public class LRARequestFilter implements ContainerRequestFilter {
@@ -163,6 +164,10 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
         if (lra.join() && lraId != null) {
             lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), requestContext.getUriInfo().getBaseUri(), null);
+        }
+
+        if (lra.cancelOn().length != 0) {
+            lraContextBuilder.cancelOn(lra.cancelOn());
         }
 
         requestContext.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, lraContextBuilder.build());

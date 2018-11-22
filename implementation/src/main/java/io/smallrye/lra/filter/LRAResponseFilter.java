@@ -9,8 +9,10 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
+import java.util.Arrays;
 
 @Provider
 public class LRAResponseFilter implements ContainerResponseFilter {
@@ -35,7 +37,11 @@ public class LRAResponseFilter implements ContainerResponseFilter {
         }
         
         if (lraContext.isNewlyStarted()) {
-            closeLRA(lraContext);
+            endLRA(lraContext, true);
+        }
+
+        if (lraContext.getCancelOn() != null && hasStatusIn(responseContext, lraContext.getCancelOn())) {
+            endLRA(lraContext, false);
         }
 
         if (lraContext.getSuspendedLRA() != null) {
@@ -43,13 +49,20 @@ public class LRAResponseFilter implements ContainerResponseFilter {
         }
     }
 
-    private void closeLRA(LRAContext lraContext) {
+    private boolean hasStatusIn(ContainerResponseContext responseContext, Response.Status[] cancelOn) {
+        return Arrays.stream(cancelOn)
+                .map(Response.Status::getStatusCode)
+                .anyMatch(code -> code == responseContext.getStatus());
+    }
+
+    private void endLRA(LRAContext lraContext, boolean complete) {
         try {
-            lraClient.closeLRA(lraContext.getLraId());
+            String respone = complete ? lraClient.closeLRA(lraContext.getLraId()) : lraClient.cancelLRA(lraContext.getLraId());
+            log.info("LRA ended successfully: " + respone);
         } catch (NotFoundException e) {
-            log.infof("LRA %s is already closed", lraContext.getLraId());
+            log.warnf("LRA %s has already ended", lraContext.getLraId());
         } catch (GenericLRAException e) {
-            log.infof("Unable to close LRA %s; %s", lraContext.getLraId(), e.getCause().getMessage());
+            log.errorf("Unable to end LRA %s; %s", lraContext.getLraId(), e.getCause().getMessage());
         }
     }
 }
