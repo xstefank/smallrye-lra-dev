@@ -96,17 +96,17 @@ public class SmallRyeLRAClient implements LRAClient {
         return endLRA(lraId, true);
     }
 
-    private String endLRA(URL lraId, boolean confirm) {
+    private String endLRA(URL lraId, boolean close) {
         Objects.requireNonNull(lraId);
         Response response = null;
 
         try {
-            response = confirm ? coordinatorRESTClient.closeLRA(Utils.extractLraId(lraId)) :
+            response = close ? coordinatorRESTClient.closeLRA(Utils.extractLraId(lraId)) :
                     coordinatorRESTClient.cancelLRA(Utils.extractLraId(lraId));
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unexpected returned status code for LRA "
-                        + (confirm ? "confirmation" : "compensation"), null);
+                        + (close ? "confirmation" : "compensation"), null);
             }
 
             return response.readEntity(String.class);

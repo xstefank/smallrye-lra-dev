@@ -34,7 +34,8 @@ public class TCKRunnerITCase {
                 "-jar",
                 "tck-client-thorntail.jar", "-Dswarm.port.offset=100",
                 "-Dio.smallrye.lra.LRACoordinatorRESTClient/mp-rest/url=http://localhost:8080",
-                "-Dservice.http.port=8180");
+                "-Dservice.http.port=8180",
+                "-Dlra.http.port=8080");
         TCKClientPb.inheritIO();
         TCKClientPb.directory(new File("../tck-client/target"));
         System.out.println("Starting LRA TCK client...");
@@ -43,7 +44,7 @@ public class TCKRunnerITCase {
         waitForTCK();
 
         System.out.println("Executing TCK run...");
-        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/all" );
+        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/all");
         Response response = target.request().put(null);
 
         destroyProcess(coordinatorProcess);
