@@ -3,7 +3,6 @@ package io.smallrye.lra;
 import org.eclipse.microprofile.lra.client.LRAClient;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -16,20 +15,21 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import static io.smallrye.lra.utils.LRAConstants.CLIENT_ID;
 import static io.smallrye.lra.utils.LRAConstants.LRA_ID_PATH_PARAM;
-import static io.smallrye.lra.utils.LRAConstants.RECOVERY_ID_PATH_NAME;
+import static io.smallrye.lra.utils.LRAConstants.PARENT_LRA;
 import static io.smallrye.lra.utils.LRAConstants.STATUS;
 import static io.smallrye.lra.utils.LRAConstants.TIMELIMIT;
 
 @Path("/lra-coordinator")
 @RegisterRestClient
-public interface LRACoordinatorRESTClient {
+public interface LRACoordinator {
 
     @POST
     @Path("/start")
     @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
-    Response startLRA(@QueryParam("ParentLRA") @DefaultValue("") String parentLRA,
-                      @QueryParam("ClientId") @DefaultValue("") String clientID,
+    Response startLRA(@QueryParam(PARENT_LRA) @DefaultValue("") String parentLRA,
+                      @QueryParam(CLIENT_ID) @DefaultValue("") String clientID,
                       @QueryParam(TIMELIMIT) @DefaultValue("0") Long timelimit);
 
     @GET

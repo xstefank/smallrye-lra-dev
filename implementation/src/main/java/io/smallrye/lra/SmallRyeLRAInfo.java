@@ -5,15 +5,10 @@ import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
 import org.eclipse.microprofile.lra.client.LRAInfo;
 
 public class SmallRyeLRAInfo implements LRAInfo {
-    
-//    private String lraId;
-//    private String clientId;
-//    private CompensatorStatus status;
-//    private boolean isTopLevel;
-    
+
+    private String lraId;
     private int startTime;
     private int finishTime;
-    private String lraId;
     private String clientId;
     private String status;
     private boolean complete;
@@ -41,9 +36,21 @@ public class SmallRyeLRAInfo implements LRAInfo {
         return lraId;
     }
 
+    public int getStartTime() {
+        return startTime;
+    }
+
+    public int getFinishTime() {
+        return finishTime;
+    }
+
     @Override
     public String getClientId() {
         return clientId;
+    }
+
+    public String getStatus() {
+        return status;
     }
 
     @Override

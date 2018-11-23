@@ -14,7 +14,6 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -36,7 +35,7 @@ public class SmallRyeLRAClient implements LRAClient {
     private URL currentLRA;
 
     @Inject
-    private LRACoordinatorRESTClient coordinatorRESTClient;
+    private LRACoordinator coordinator;
 
     @Override
     public void close() {
@@ -52,7 +51,7 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
 
         try {
-            response = coordinatorRESTClient.startLRA(parentLRA != null ? parentLRA.toExternalForm() : null,
+            response = coordinator.startLRA(parentLRA != null ? parentLRA.toExternalForm() : null,
                     clientID, unit.toMillis(timeout));
 
             if (parentLRA != null && response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
@@ -101,8 +100,8 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
 
         try {
-            response = close ? coordinatorRESTClient.closeLRA(Utils.extractLraId(lraId)) :
-                    coordinatorRESTClient.cancelLRA(Utils.extractLraId(lraId));
+            response = close ? coordinator.closeLRA(Utils.extractLraId(lraId)) :
+                    coordinator.cancelLRA(Utils.extractLraId(lraId));
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unexpected returned status code for LRA "
@@ -131,21 +130,23 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public List<LRAInfo> getRecoveringLRAs() throws GenericLRAException {
-        return getLRAs(LRAStatus.RECOVERING);
+//        return getLRAs(LRAStatus.RECOVERING);
+        return null;
     }
 
-    private List<LRAInfo> getLRAs(LRAStatus status) {
+    private List<LRAInfo> getLRAs(CompensatorStatus status) {
         Response response = null;
 
         try {
-            response = status == null ? coordinatorRESTClient.getAllLRAs() : coordinatorRESTClient.getAllLRAs(status.asString());
+            response = status == null ? coordinator.getAllLRAs() : coordinator.getAllLRAs(status.name());
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(null, response.getStatus(),
                         String.format("Unable to get %s LRAs", status == null ? "all" : status), null);
             }
 
-            List<SmallRyeLRAInfo> smallRyeLRAInfos = response.readEntity(new GenericType<List<SmallRyeLRAInfo>>() {});
+            List<SmallRyeLRAInfo> smallRyeLRAInfos = response.readEntity(new GenericType<List<SmallRyeLRAInfo>>() {
+            });
             List<LRAInfo> result = new ArrayList<>();
             smallRyeLRAInfos.forEach(result::add);
             return result;
@@ -163,7 +164,7 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
 
         try {
-            response = coordinatorRESTClient.getLRA(Utils.extractLraId(lraId));
+            response = coordinator.getLRA(Utils.extractLraId(lraId));
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to get LRA status", null);
@@ -181,10 +182,10 @@ public class SmallRyeLRAClient implements LRAClient {
     public Boolean isActiveLRA(URL lraId) throws GenericLRAException {
         Objects.requireNonNull(lraId);
         Response response = null;
-        
+
         try {
-            response = coordinatorRESTClient.isActiveLRA(Utils.extractLraId(lraId));
-            
+            response = coordinator.isActiveLRA(Utils.extractLraId(lraId));
+
             return response.getStatus() == Response.Status.OK.getStatusCode();
         } catch (WebApplicationException e) {
             return false;
@@ -214,17 +215,20 @@ public class SmallRyeLRAClient implements LRAClient {
 
         try {
             String linkHeader = new LRAResource(compensateUrl, completeUrl, statusUrl, forgetUrl, leaveUrl).asLinkHeader();
-            response = coordinatorRESTClient.joinLRA(Utils.extractLraId(lraId), timelimit,
+            response = coordinator.joinLRA(Utils.extractLraId(lraId), timelimit,
                     lraId.toString(),
                     linkHeader,
-                   compensatorData);
+                    compensatorData);
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to join LRA", null);
             }
 
             return response.readEntity(String.class);
-        } catch(Throwable t) {
+        } catch (WebApplicationException e) {
+            throw new GenericLRAException(lraId, response != null ? response.getStatus() : -1,
+                    "Unable to join LRA because it is probably already completed or compensated", e);
+        } catch (Throwable t) {
             throw new GenericLRAException(lraId, -1, "Unable to join LRA", t);
         } finally {
             if (response != null) response.close();
@@ -249,24 +253,8 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public URL updateCompensator(URL recoveryUrl, URL compensateUrl, URL completeUrl, URL forgetUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
-        Objects.requireNonNull(recoveryUrl);
-        Response response = null;
-
-        try {
-            response = buildCompensatorRequest(recoveryUrl)
-                    .put(Entity.json(new ParticipantDefinition(completeUrl, compensateUrl, forgetUrl,
-                            null, statusUrl, compensatorData)));
-
-            if (isInvalidResponse(response)) {
-                throw new GenericLRAException(recoveryUrl, response.getStatus(), "Unable to update LRA participant", null);
-            }
-
-            return new URL(response.readEntity(String.class));
-        } catch (MalformedURLException e) {
-            throw new GenericLRAException(recoveryUrl, response.getStatus(), "Invalid response for participant update", e);
-        } finally {
-            if (response != null) response.close();
-        }
+        // not supported by the coordinator yet
+        return null;
     }
 
     public void leaveLRA(URL lraId, Class<?> resourceClass, URI baseUri) throws GenericLRAException {
@@ -285,8 +273,8 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
 
         try {
-            response = coordinatorRESTClient.leaveLRA(Utils.extractLraId(lraId), body);
-            
+            response = coordinator.leaveLRA(Utils.extractLraId(lraId), body);
+
             if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
                 throw new NotFoundException("Unable to leave LRA: " + lraId);
             }
@@ -310,7 +298,7 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
 
         try {
-            response = coordinatorRESTClient.renewTimeLimit(Utils.extractLraId(lraId), unit.toMillis(limit));
+            response = coordinator.renewTimeLimit(Utils.extractLraId(lraId), unit.toMillis(limit));
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to renew timelimit", null);

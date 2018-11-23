@@ -3,7 +3,7 @@ package io.smallrye.lra.filter;
 import javax.ws.rs.core.Response;
 import java.net.URL;
 
-public class LRAContextBuilder {
+class LRAContextBuilder {
 
     private URL lraId;
     private boolean newlyStarted;
@@ -11,32 +11,32 @@ public class LRAContextBuilder {
     private Response.Status[] cancelOn;
     private Response.Status.Family[] cancelOnFamily;
 
-    public LRAContextBuilder lraId(URL lraId) {
+    LRAContextBuilder lraId(URL lraId) {
         this.lraId = lraId;
         return this;
     }
 
-    public LRAContextBuilder newlyStarted(boolean newlyStarted) {
+    LRAContextBuilder newlyStarted(boolean newlyStarted) {
         this.newlyStarted = newlyStarted;
         return this;
     }
 
-    public LRAContextBuilder suspend(URL lraId) {
+    LRAContextBuilder suspend(URL lraId) {
         this.suspendedLRA = lraId;
         return this;
     }
 
-    public LRAContextBuilder cancelOn(Response.Status[] cancelOn) {
+    LRAContextBuilder cancelOn(Response.Status[] cancelOn) {
         this.cancelOn = cancelOn;
         return this;
     }
 
-    public LRAContextBuilder cancelOnFamily(Response.Status.Family[] cancelOnFamily) {
+    LRAContextBuilder cancelOnFamily(Response.Status.Family[] cancelOnFamily) {
         this.cancelOnFamily = cancelOnFamily;
         return this;
     }
     
-    public LRAContext build() {
+    LRAContext build() {
         return new LRAContext(lraId, newlyStarted, suspendedLRA, cancelOn, cancelOnFamily);
     }
 }

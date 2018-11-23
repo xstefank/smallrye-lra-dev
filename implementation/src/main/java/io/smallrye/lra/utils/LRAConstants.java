@@ -6,15 +6,12 @@ public final class LRAConstants {
 
     public static final long DEFAULT_TIMELIMIT = 0L;
 
-    public static final String COORDINATOR = "/lra-coordinator";
-
-    public static final String CLIENT_ID_PARAM = "ClientID";
-    public static final String TIMELIMIT_PARAM = "TimeLimit";
-    public static final String PARENT_LRA_PARAM = "ParentLRA";
-    public static final String LRA_ID_PATH_PARAM = "LraId";
-    public static final String RECOVERY_ID_PATH_NAME = "RecoveryId";
-    public static final String STATUS = "Status";
+    public static final String CLIENT_ID = "ClientId";
+    public static final String PARENT_LRA = "ParentLRA";
     public static final String TIMELIMIT = "TimeLimit";
+    public static final String LRA_ID_PATH_PARAM = "LraId";
+    public static final String RECOVERY_ID_PATH_PARAM = "RecoveryId";
+    public static final String STATUS = "Status";
 
     public static final String START = "/start";
     public static final String CLOSE = String.format("/{%s}/close", LRA_ID_PATH_PARAM);

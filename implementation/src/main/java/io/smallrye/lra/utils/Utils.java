@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 public class Utils {
 
     public static String extractLraId(URL lra) {
-        return lra != null ? lra.getPath().replaceFirst(".*/([^/?]+).*", "$1") : null;
+        return lra != null ? lra.toExternalForm().replaceFirst(".*/([^/?]+).*", "$1") : null;
     }
 
     public static String getFormattedString(URL parentLRA, String clientID, Long timeout, TimeUnit unit) {
