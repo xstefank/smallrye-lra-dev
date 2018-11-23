@@ -20,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,16 +32,13 @@ import java.util.concurrent.TimeUnit;
 @RequestScoped
 public class SmallRyeLRAClient implements LRAClient {
 
-    private static final Logger log = Logger.getLogger(SmallRyeLRAClient.class);
     private URL currentLRA;
 
     @Inject
     private LRACoordinator coordinator;
-
-    @Override
-    public void close() {
-
-    }
+    
+    @Inject
+    private LRARecoveryCoordinator recoveryCoordinator;
 
     public URL startLRA(URL parentLRA, String clientID, Long timeout) {
         return startLRA(parentLRA, clientID, timeout, TimeUnit.MILLISECONDS);
@@ -70,9 +68,7 @@ public class SmallRyeLRAClient implements LRAClient {
             throw new GenericLRAException(null, response.getStatus(),
                     "Unable to start LRA for " + Utils.getFormattedString(parentLRA, clientID, timeout, unit), e);
         } finally {
-            if (response != null) {
-                response.close();
-            }
+            if (response != null) response.close();
         }
     }
 
@@ -112,9 +108,7 @@ public class SmallRyeLRAClient implements LRAClient {
         } catch (WebApplicationException t) {
             throw new NotFoundException("Unable to find LRA: " + lraId);
         } finally {
-            if (response != null) {
-                response.close();
-            }
+            if (response != null) response.close();
         }
     }
 
@@ -128,12 +122,6 @@ public class SmallRyeLRAClient implements LRAClient {
         return getLRAs(null);
     }
 
-    @Override
-    public List<LRAInfo> getRecoveringLRAs() throws GenericLRAException {
-//        return getLRAs(LRAStatus.RECOVERING);
-        return null;
-    }
-
     private List<LRAInfo> getLRAs(CompensatorStatus status) {
         Response response = null;
 
@@ -145,14 +133,34 @@ public class SmallRyeLRAClient implements LRAClient {
                         String.format("Unable to get %s LRAs", status == null ? "all" : status), null);
             }
 
-            List<SmallRyeLRAInfo> smallRyeLRAInfos = response.readEntity(new GenericType<List<SmallRyeLRAInfo>>() {
-            });
-            List<LRAInfo> result = new ArrayList<>();
-            smallRyeLRAInfos.forEach(result::add);
-            return result;
+            List<SmallRyeLRAInfo> smallRyeLRAInfos = response.readEntity(new GenericType<List<SmallRyeLRAInfo>>() {});
+            return new ArrayList<>(smallRyeLRAInfos);
         } catch (ProcessingException e) {
             throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
                     String.format("Invalid content received for %s LRAs", status == null ? "all" : status), e);
+        } finally {
+            if (response != null) response.close();
+        }
+    }
+
+    @Override
+    public List<LRAInfo> getRecoveringLRAs() throws GenericLRAException {
+        Response response = null;
+
+        try {
+            response = recoveryCoordinator.getRecoveringLRAs();
+
+            if (isInvalidResponse(response)) {
+                throw new GenericLRAException(null, response.getStatus(),
+                        "Unable to get recovering LRAs", null);
+            }
+
+            List<SmallRyeLRAInfo> smallRyeLRAInfos = response.readEntity(new GenericType<List<SmallRyeLRAInfo>>() {
+            });
+            return new ArrayList<>(smallRyeLRAInfos);
+        } catch (ProcessingException e) {
+            throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
+                    "Invalid content received for recovering LRAs", e);
         } finally {
             if (response != null) response.close();
         }
@@ -253,8 +261,21 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public URL updateCompensator(URL recoveryUrl, URL compensateUrl, URL completeUrl, URL forgetUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
-        // not supported by the coordinator yet
-        return null;
+        Objects.requireNonNull(recoveryUrl);
+        Response response = null;
+        
+        String[] paths = recoveryUrl.toExternalForm().split("/");
+        try {
+            response = recoveryCoordinator.updateCompensator(paths[paths.length - 2], paths[paths.length - 1],
+                    new LRAResource(compensateUrl, completeUrl, statusUrl, forgetUrl, null).asLinkHeader());
+            
+            return new URL(response.readEntity(String.class));
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
+                    "Unable to update compensator " + recoveryUrl, e);
+        } finally {
+            if (response != null) response.close();
+        }
     }
 
     public void leaveLRA(URL lraId, Class<?> resourceClass, URI baseUri) throws GenericLRAException {
@@ -311,6 +332,11 @@ public class SmallRyeLRAClient implements LRAClient {
     @Override
     public URL getCurrent() {
         return currentLRA;
+    }
+
+    @Override
+    public void close() {
+        currentLRA = null;
     }
 
     private Invocation.Builder buildCompensatorRequest(URL recoveryUrl) {
