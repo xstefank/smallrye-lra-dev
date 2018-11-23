@@ -1,4 +1,4 @@
-package io.smallrye.lra;
+package io.smallrye.lra.api;
 
 import org.eclipse.microprofile.lra.client.LRAClient;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -15,11 +15,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static io.smallrye.lra.utils.LRAConstants.CLIENT_ID;
-import static io.smallrye.lra.utils.LRAConstants.LRA_ID_PATH_PARAM;
-import static io.smallrye.lra.utils.LRAConstants.PARENT_LRA;
-import static io.smallrye.lra.utils.LRAConstants.STATUS;
-import static io.smallrye.lra.utils.LRAConstants.TIMELIMIT;
+import static io.smallrye.lra.model.LRAConstants.CLIENT_ID;
+import static io.smallrye.lra.model.LRAConstants.LRA_ID_PATH_PARAM;
+import static io.smallrye.lra.model.LRAConstants.PARENT_LRA;
+import static io.smallrye.lra.model.LRAConstants.STATUS;
+import static io.smallrye.lra.model.LRAConstants.TIMELIMIT;
 
 @Path("/lra-coordinator")
 @RegisterRestClient

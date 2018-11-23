@@ -1,7 +1,7 @@
 package io.smallrye.lra.filter;
 
 import io.smallrye.lra.SmallRyeLRAClient;
-import io.smallrye.lra.utils.LRAConstants;
+import io.smallrye.lra.model.LRAConstants;
 import org.eclipse.microprofile.lra.annotation.LRA;
 import org.eclipse.microprofile.lra.annotation.Leave;
 import org.eclipse.microprofile.lra.annotation.NestedLRA;

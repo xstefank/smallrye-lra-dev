@@ -1,4 +1,4 @@
-package io.smallrye.lra.utils;
+package io.smallrye.lra.model;
 
 public final class LRAConstants {
 
@@ -13,10 +13,4 @@ public final class LRAConstants {
     public static final String RECOVERY_ID_PATH_PARAM = "RecoveryId";
     public static final String STATUS = "Status";
 
-    public static final String START = "/start";
-    public static final String CLOSE = String.format("/{%s}/close", LRA_ID_PATH_PARAM);
-    public static final String CANCEL = String.format("/{%s}/cancel", LRA_ID_PATH_PARAM);
-
-
-    public static final String UTF_8 = "UTF-8";
 }

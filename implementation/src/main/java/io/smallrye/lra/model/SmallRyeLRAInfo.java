@@ -1,4 +1,4 @@
-package io.smallrye.lra;
+package io.smallrye.lra.model;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import org.eclipse.microprofile.lra.annotation.CompensatorStatus;

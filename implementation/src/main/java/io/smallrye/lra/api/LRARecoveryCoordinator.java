@@ -1,4 +1,4 @@
-package io.smallrye.lra;
+package io.smallrye.lra.api;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
@@ -10,8 +10,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static io.smallrye.lra.utils.LRAConstants.LRA_ID_PATH_PARAM;
-import static io.smallrye.lra.utils.LRAConstants.RECOVERY_ID_PATH_PARAM;
+import static io.smallrye.lra.model.LRAConstants.LRA_ID_PATH_PARAM;
+import static io.smallrye.lra.model.LRAConstants.RECOVERY_ID_PATH_PARAM;
 
 @Path("/lra-recovery-coordinator")
 @RegisterRestClient

@@ -1,12 +1,14 @@
 package io.smallrye.lra;
 
+import io.smallrye.lra.api.LRACoordinator;
+import io.smallrye.lra.api.LRARecoveryCoordinator;
 import io.smallrye.lra.model.LRAResource;
+import io.smallrye.lra.model.SmallRyeLRAInfo;
 import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
 import org.eclipse.microprofile.lra.client.LRAClient;
 import org.eclipse.microprofile.lra.client.LRAInfo;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
