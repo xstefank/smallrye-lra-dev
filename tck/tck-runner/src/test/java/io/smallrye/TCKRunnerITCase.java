@@ -52,7 +52,7 @@ public class TCKRunnerITCase {
         destroyProcess(TCKClientProcess);
 
         System.out.printf("%n------- TEST RESULTS -------%n");
-        final JsonProvider provider = JsonProvider.provider(); // doesnt need to be instantiated each time
+        final JsonProvider provider = JsonProvider.provider();
         try (final JsonReader reader = Json.createReader(new StringReader(response.readEntity(String.class)))) {
             try (final JsonWriter writer = provider.createWriterFactory(singletonMap("javax.json.stream.JsonGenerator.prettyPrinting", "true")).createWriter(System.out)) {
                 writer.write(reader.read());

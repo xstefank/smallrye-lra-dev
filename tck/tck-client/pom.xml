@@ -13,8 +13,7 @@
     <packaging>war</packaging>
     
     <name>SmallRye: TCK client</name>
-
-
+    
     <properties>
         <version.thorntail>2.2.1.Final</version.thorntail>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -45,8 +44,7 @@
             <groupId>org.eclipse.microprofile.lra</groupId>
             <artifactId>microprofile-lra-tck</artifactId>
         </dependency>
-
-
+        
         <dependency>
             <groupId>io.thorntail</groupId>
             <artifactId>jaxrs</artifactId>
