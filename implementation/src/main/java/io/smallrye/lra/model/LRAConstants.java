@@ -12,5 +12,6 @@ public final class LRAConstants {
     public static final String LRA_ID_PATH_PARAM = "LraId";
     public static final String RECOVERY_ID_PATH_PARAM = "RecoveryId";
     public static final String STATUS = "Status";
+    public static final String PARTICIPANT_ID_PATH_PARAM = "participantId";
 
 }
