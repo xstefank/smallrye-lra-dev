@@ -1,3 +1,5 @@
 
-- LRAManagement impl
-- TimeLimit for compensations
+* LRAManagement impl
+** timeout for join
+** deserializers
+* TimeLimit for compensations
