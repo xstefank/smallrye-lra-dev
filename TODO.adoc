@@ -1,9 +1,3 @@
-= TODO
 
-- remove logging?
-- TCK
-- remove setters from client
-- updateCompensator - recoveryUrl - why needs to be url?
-    - missing leaveUri!
-- leaveLRA - missing participant identification (recoveryurl)
-- is every impl required to associated LRA with a thread (last 2 methods in client API)
+- LRAManagement impl
+- TimeLimit for compensations
