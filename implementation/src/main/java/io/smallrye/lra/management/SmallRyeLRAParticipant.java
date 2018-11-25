@@ -4,6 +4,7 @@ import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
 import org.eclipse.microprofile.lra.participant.LRAParticipant;
 import org.eclipse.microprofile.lra.participant.TerminationException;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import java.net.URL;
 import java.util.HashMap;
@@ -20,31 +21,57 @@ public class SmallRyeLRAParticipant {
     }
 
     public Response complete(URL lraId) {
-        return endParticipantExecution(true, lraId);
+        return endParticipantExecution(lraId, true);
     }
 
     public Response compensate(URL lraId) {
-        return endParticipantExecution(false, lraId);
+        return endParticipantExecution(lraId, false);
     }
 
-    private Response endParticipantExecution(boolean complete, URL lraId) {
+    public CompensatorStatus getStatus(URL lraId) {
+        LRAResult lraResult = associatedResults.get(lraId.toExternalForm());
+
+        if (lraResult == null) {
+            return null;
+        }
+
+        Future<Void> result = lraResult.getResult();
+
+        if (lraResult.isCompleting()) {
+            return getCompensatorStatusForResult(result, true);
+        } else {
+            return getCompensatorStatusForResult(result, false);
+        }
+    }
+
+    private CompensatorStatus getCompensatorStatusForResult(Future<Void> result, boolean completing) {
+        if (result.isDone()) {
+            return completing ? CompensatorStatus.Completed : CompensatorStatus.Compensated;
+        } else if (result.isCancelled()) {
+            return completing ? CompensatorStatus.FailedToComplete : CompensatorStatus.FailedToCompensate;
+        } else {
+            return completing ? CompensatorStatus.Completing : CompensatorStatus.Compensating;
+        }
+    }
+
+    private Response endParticipantExecution(URL lraId, boolean completing) {
         Response response = null;
         Future<Void> result;
 
         try {
-            if (complete) {
+            if (completing) {
                 result = delegate.completeWork(lraId);
             } else {
                 result = delegate.compensateWork(lraId);
             }
 
             if (result == null) {
-                response = Response.ok(complete ? CompensatorStatus.Completed : CompensatorStatus.Completing).build();
+                response = Response.ok(completing ? CompensatorStatus.Completed : CompensatorStatus.Completing).build();
             } else {
-                associatedResults.put(lraId.toExternalForm(), new LRAResult(result, complete));
+                associatedResults.put(lraId.toExternalForm(), new LRAResult(result, completing));
             }
-        } catch (TerminationException e) {
-            response = Response.ok(complete ? CompensatorStatus.FailedToComplete : CompensatorStatus.FailedToCompensate).build();
+        } catch (TerminationException | NotFoundException e) {
+            response = Response.ok(completing ? CompensatorStatus.FailedToComplete : CompensatorStatus.FailedToCompensate).build();
         }
 
         return response;
