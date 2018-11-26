@@ -34,7 +34,8 @@ public class LRAParticipantResource {
             @PathParam(LRA_ID_PATH_PARAM) String lraId,
             @PathParam(PARTICIPANT_ID_PATH_PARAM) String participantId,
             @HeaderParam(LRAClient.LRA_HTTP_HEADER) String lraIdHeader, String data) throws MalformedURLException {
-        return lraManagement.getParticipant(participantId).compensate(new URL(lraId));
+        URL lra = new URL(lraId);
+        return lraManagement.getParticipant(participantId, lra, data.getBytes()).compensate(lra);
     }
 
     @PUT
@@ -44,7 +45,8 @@ public class LRAParticipantResource {
             @PathParam(LRA_ID_PATH_PARAM) String lraId,
             @PathParam(PARTICIPANT_ID_PATH_PARAM) String participantId,
             @HeaderParam(LRAClient.LRA_HTTP_HEADER) String lraIdHeader, String data) throws MalformedURLException {
-        return lraManagement.getParticipant(participantId).complete(new URL(lraId));
+        URL lra = new URL(lraId);
+        return lraManagement.getParticipant(participantId, lra, data.getBytes()).complete(lra);
     }
     
     @GET
@@ -54,7 +56,8 @@ public class LRAParticipantResource {
             @PathParam(LRA_ID_PATH_PARAM) String lraId,
             @PathParam(PARTICIPANT_ID_PATH_PARAM) String participantId,
             @HeaderParam(LRAClient.LRA_HTTP_HEADER) String lraIdHeader) throws MalformedURLException {
-        CompensatorStatus status = lraManagement.getParticipant(participantId).getStatus(new URL(lraId));
+        URL lra = new URL(lraId);
+        CompensatorStatus status = lraManagement.getParticipant(participantId, lra, null).getStatus(lra);
         
         if (status == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
