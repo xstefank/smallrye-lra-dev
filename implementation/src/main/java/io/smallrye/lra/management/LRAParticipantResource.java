@@ -7,12 +7,17 @@ import org.eclipse.microprofile.lra.annotation.Status;
 import org.eclipse.microprofile.lra.client.LRAClient;
 
 import javax.inject.Inject;
+import javax.print.attribute.standard.Media;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -29,28 +34,31 @@ public class LRAParticipantResource {
 
     @PUT
     @Path(PARTICIPANT_PATH + "/compensate")
+    @Produces(MediaType.TEXT_PLAIN)
     @Compensate
     public Response compensate(
             @PathParam(LRA_ID_PATH_PARAM) String lraId,
             @PathParam(PARTICIPANT_ID_PATH_PARAM) String participantId,
             @HeaderParam(LRAClient.LRA_HTTP_HEADER) String lraIdHeader, String data) throws MalformedURLException {
-        URL lra = new URL(lraId);
+        URL lra = new URL(lraIdHeader);
         return lraManagement.getParticipant(participantId, lra, data.getBytes()).compensate(lra);
     }
 
     @PUT
     @Path(PARTICIPANT_PATH + "/complete")
+    @Produces(MediaType.TEXT_PLAIN)
     @Complete
     public Response complete(
             @PathParam(LRA_ID_PATH_PARAM) String lraId,
             @PathParam(PARTICIPANT_ID_PATH_PARAM) String participantId,
             @HeaderParam(LRAClient.LRA_HTTP_HEADER) String lraIdHeader, String data) throws MalformedURLException {
-        URL lra = new URL(lraId);
+        URL lra = new URL(lraIdHeader);
         return lraManagement.getParticipant(participantId, lra, data.getBytes()).complete(lra);
     }
     
     @GET
     @Path(PARTICIPANT_PATH + "/status")
+    @Produces(MediaType.TEXT_PLAIN)
     @Status
     public Response status(
             @PathParam(LRA_ID_PATH_PARAM) String lraId,

@@ -1,5 +1,6 @@
 package io.smallrye.lra.management;
 
+import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
 import org.eclipse.microprofile.lra.client.LRAClient;
 import org.eclipse.microprofile.lra.participant.JoinLRAException;
@@ -9,13 +10,14 @@ import org.eclipse.microprofile.lra.participant.LRAParticipantDeserializer;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
@@ -26,19 +28,24 @@ public class SmallRyeLRAManagement implements LRAManagement {
     
     @Inject
     private LRAClient lraClient;
-
-    @Context
-    private UriInfo uriInfo;
     
     @Override
     public String joinLRA(LRAParticipant participant, URL lraId, Long timeLimit, TimeUnit unit) throws JoinLRAException {
         String recoveryUrl;
+        String participantId = UUID.randomUUID().toString();
         
         try {
-            recoveryUrl = lraClient.joinLRA(lraId, LRAParticipantResource.class, uriInfo.getBaseUri(), null);
-            participants.put(recoveryUrl, new SmallRyeLRAParticipant(participant));
+            String baseUrl = "http://localhost:8180/lra-participant/" + Utils.extractLraId(lraId) + "/" + participantId;
+            recoveryUrl = lraClient.joinLRA(lraId, unit.toMillis(timeLimit),
+                    new URL(baseUrl + "/compensate"),
+                    new URL(baseUrl + "/complete"),
+                    new URL(baseUrl), new URL(baseUrl),
+                    new URL(baseUrl + "/status"), null);
+            participants.put(participantId, new SmallRyeLRAParticipant(participant));
         } catch (GenericLRAException e) {
             throw new JoinLRAException(lraId, e.getStatusCode(), e.getMessage(), e);
+        } catch (MalformedURLException e) {
+            throw new JoinLRAException(lraId, -1, "Unable to join LRA", e);
         }
         
         return recoveryUrl;
