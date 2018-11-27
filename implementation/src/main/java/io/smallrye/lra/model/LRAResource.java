@@ -5,6 +5,7 @@ import org.eclipse.microprofile.lra.annotation.Complete;
 import org.eclipse.microprofile.lra.annotation.Forget;
 import org.eclipse.microprofile.lra.annotation.Leave;
 import org.eclipse.microprofile.lra.annotation.Status;
+import org.eclipse.microprofile.lra.annotation.TimeLimit;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Link;
@@ -22,6 +23,7 @@ public class LRAResource {
     private URL statusUrl;
     private URL forgetUrl;
     private URL leaveUrl;
+    private Long compensateTimeLimit;
 
     public LRAResource(URL compensateUrl, URL completeUrl, URL statusUrl, URL forgetUrl, URL leaveUrl) {
         this.compensateUrl = compensateUrl;
@@ -42,6 +44,7 @@ public class LRAResource {
                 completeUrl = uriBuilder.clone().path(getPath(method)).build().toURL();
             } else if (method.getAnnotation(Compensate.class) != null && compensateUrl == null) {
                 compensateUrl = uriBuilder.clone().path(getPath(method)).build().toURL();
+                compensateTimeLimit = getTimeLimit(method);
             } else if (method.getAnnotation(Status.class) != null && statusUrl == null) {
                 statusUrl = uriBuilder.clone().path(getPath(method)).build().toURL();
             } else if (method.getAnnotation(Forget.class) != null && forgetUrl == null) { 
@@ -49,6 +52,16 @@ public class LRAResource {
             } else if (method.getAnnotation(Leave.class) != null && leaveUrl == null) {
                 leaveUrl = uriBuilder.clone().path(getPath(method)).build().toURL();
             }
+        }
+    }
+
+    private long getTimeLimit(Method method) {
+        TimeLimit timeLimit = method.getAnnotation(TimeLimit.class);
+
+        if (timeLimit != null) {
+            return timeLimit.unit().toMillis(timeLimit.limit());
+        } else {
+            return 0L;
         }
     }
 
@@ -75,6 +88,10 @@ public class LRAResource {
 
     public URL getLeaveUrl() {
         return leaveUrl;
+    }
+
+    public Long getCompensateTimeLimit() {
+        return compensateTimeLimit;
     }
 
     @Override

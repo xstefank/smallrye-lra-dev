@@ -248,7 +248,7 @@ public class SmallRyeLRAClient implements LRAClient {
     public String joinLRA(URL lraId, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
         try {
             LRAResource resource = new LRAResource(resourceClass, baseUri);
-            return joinLRA(lraId, 0L,
+            return joinLRA(lraId, resource.getCompensateTimeLimit(),
                     resource.getCompensateUrl(),
                     resource.getCompleteUrl(),
                     resource.getForgetUrl(),
