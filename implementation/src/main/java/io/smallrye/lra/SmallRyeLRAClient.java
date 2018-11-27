@@ -250,11 +250,11 @@ public class SmallRyeLRAClient implements LRAClient {
         try {
             LRAResource resource = new LRAResource(resourceClass, baseUri);
             return joinLRA(lraId, 0L,
-                    resource.getCompensateUri().toURL(),
-                    resource.getCompleteUri().toURL(),
-                    resource.getForgetUri().toURL(),
-                    resource.getLeaveUri().toURL(),
-                    resource.getStatusUri().toURL(),
+                    resource.getCompensateUrl(),
+                    resource.getCompleteUrl(),
+                    resource.getForgetUrl(),
+                    resource.getLeaveUrl(),
+                    resource.getStatusUrl(),
                     compensatorData);
         } catch (IllegalArgumentException | MalformedURLException e) {
             throw new GenericLRAException(lraId, -1, e.getMessage(), e);
@@ -272,7 +272,7 @@ public class SmallRyeLRAClient implements LRAClient {
                     new LRAResource(compensateUrl, completeUrl, statusUrl, forgetUrl, null).asLinkHeader());
             
             return new URL(response.readEntity(String.class));
-        } catch (MalformedURLException | URISyntaxException e) {
+        } catch (MalformedURLException e) {
             throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
                     "Unable to update compensator " + recoveryUrl, e);
         } finally {
@@ -281,8 +281,8 @@ public class SmallRyeLRAClient implements LRAClient {
     }
 
     public void leaveLRA(URL lraId, Class<?> resourceClass, URI baseUri) throws GenericLRAException {
-        LRAResource lraResource = new LRAResource(resourceClass, baseUri);
         try {
+            LRAResource lraResource = new LRAResource(resourceClass, baseUri);
             leaveLRA(lraId, lraResource.asLinkHeader());
         } catch (MalformedURLException e) {
             throw new GenericLRAException(lraId, -1, "Invalid urls produced by resource class", e);

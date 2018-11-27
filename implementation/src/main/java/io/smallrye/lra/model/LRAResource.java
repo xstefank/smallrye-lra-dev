@@ -13,52 +13,41 @@ import javax.ws.rs.core.UriBuilder;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 
 public class LRAResource {
 
-    private URI compensateUri;
-    private URI completeUri;
-    private URI statusUri;
-    private URI forgetUri;
-    private URI leaveUri;
+    private URL compensateUrl;
+    private URL completeUrl;
+    private URL statusUrl;
+    private URL forgetUrl;
+    private URL leaveUrl;
 
-    public LRAResource(URL compensateUrl, URL completeUrl, URL statusUrl, URL forgetUrl, URL leaveUrl) throws URISyntaxException {
-        this.compensateUri = compensateUrl.toURI();
-        this.completeUri = completeUrl.toURI();
-        this.statusUri = statusUrl.toURI();
-        this.forgetUri = forgetUrl.toURI();
-        this.leaveUri = leaveUrl.toURI();
+    public LRAResource(URL compensateUrl, URL completeUrl, URL statusUrl, URL forgetUrl, URL leaveUrl) {
+        this.compensateUrl = compensateUrl;
+        this.completeUrl = completeUrl;
+        this.statusUrl = statusUrl;
+        this.forgetUrl = forgetUrl;
+        this.leaveUrl = leaveUrl;
     }
 
-    public LRAResource(URI compensateUri, URI completeUri, URI statusUri, URI forgetUri, URI leaveUri) {
-        this.compensateUri = compensateUri;
-        this.completeUri = completeUri;
-        this.statusUri = statusUri;
-        this.forgetUri = forgetUri;
-        this.leaveUri = leaveUri;
-    }
-
-    public LRAResource(Class<?> resourceClass, URI baseUri) {
-        LRAResource.LRAResourceBuilder resourceBuilder = LRAResource.builder();
-
+    public LRAResource(Class<?> resourceClass, URI baseUri) throws MalformedURLException {
         Path resourcePath = resourceClass.getAnnotation(Path.class);
 
         UriBuilder uriBuilder = UriBuilder.fromUri(baseUri).path(resourcePath != null ? resourcePath.value() : "");
 
         for (Method method : resourceClass.getMethods()) {
 
-            if (method.getAnnotation(Complete.class) != null && completeUri == null) {
-                completeUri = uriBuilder.clone().path(getPath(method)).build();
-            } else if (method.getAnnotation(Compensate.class) != null && compensateUri == null) {
-                compensateUri = uriBuilder.clone().path(getPath(method)).build();
-            } else if (method.getAnnotation(Status.class) != null && statusUri == null) {
-                statusUri = uriBuilder.clone().path(getPath(method)).build();
-            } else if (method.getAnnotation(Forget.class) != null && forgetUri == null) { 
-                forgetUri = uriBuilder.clone().path(getPath(method)).build();
-            } else if (method.getAnnotation(Leave.class) != null && leaveUri == null) {
-                leaveUri = uriBuilder.clone().path(getPath(method)).build();
+            if (method.getAnnotation(Complete.class) != null && completeUrl == null) {
+                completeUrl = uriBuilder.clone().path(getPath(method)).build().toURL();
+            } else if (method.getAnnotation(Compensate.class) != null && compensateUrl == null) {
+                compensateUrl = uriBuilder.clone().path(getPath(method)).build().toURL();
+            } else if (method.getAnnotation(Status.class) != null && statusUrl == null) {
+                statusUrl = uriBuilder.clone().path(getPath(method)).build().toURL();
+            } else if (method.getAnnotation(Forget.class) != null && forgetUrl == null) { 
+                forgetUrl = uriBuilder.clone().path(getPath(method)).build().toURL();
+            } else if (method.getAnnotation(Leave.class) != null && leaveUrl == null) {
+                leaveUrl = uriBuilder.clone().path(getPath(method)).build().toURL();
             }
         }
     }
@@ -68,93 +57,50 @@ public class LRAResource {
         return methodPath != null ? methodPath.value() : "";
     }
 
-    public URI getCompleteUri() {
-        return completeUri;
+    public URL getCompleteUrl() {
+        return completeUrl;
     }
 
-    public URI getCompensateUri() {
-        return compensateUri;
+    public URL getCompensateUrl() {
+        return compensateUrl;
     }
 
-    public URI getStatusUri() {
-        return statusUri;
+    public URL getStatusUrl() {
+        return statusUrl;
     }
 
-    public URI getForgetUri() {
-        return forgetUri;
+    public URL getForgetUrl() {
+        return forgetUrl;
     }
 
-    public URI getLeaveUri() {
-        return leaveUri;
-    }
-
-    public static LRAResourceBuilder builder() {
-        return new LRAResourceBuilder();
+    public URL getLeaveUrl() {
+        return leaveUrl;
     }
 
     @Override
     public String toString() {
         return "LRAResource{" +
-                "completeUri=" + completeUri +
-                ", compensateUri=" + compensateUri +
-                ", statusUri=" + statusUri +
-                ", forgetUri=" + forgetUri +
-                ", leaveUri=" + leaveUri +
+                "completeUrl=" + completeUrl +
+                ", compensateUrl=" + compensateUrl +
+                ", statusUrl=" + statusUrl +
+                ", forgetUrl=" + forgetUrl +
+                ", leaveUrl=" + leaveUrl +
                 '}';
     }
 
-    public String asLinkHeader() throws MalformedURLException {
+    public String asLinkHeader() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(createLink("compensate", compensateUri.toURL())).append(",")
-                .append(createLink("complete", completeUri.toURL())).append(",")
-                .append(createLink("forget", forgetUri.toURL())).append(",")
-                .append(createLink("leave", leaveUri.toURL())).append(",")
-                .append(createLink("status", statusUri.toURL()));
+        sb.append(createLink("compensate", compensateUrl)).append(",")
+                .append(createLink("complete", completeUrl)).append(",")
+                .append(createLink("forget", forgetUrl)).append(",")
+                .append(createLink("leave", leaveUrl)).append(",")
+                .append(createLink("status", statusUrl));
 
         return sb.toString();
     }
 
     private Link createLink(String kind, URL url) {
         return Link.fromUri(url.toExternalForm()).title(kind + "URI").rel(kind).type(MediaType.TEXT_PLAIN).build();
-    }
-
-    public static final class LRAResourceBuilder {
-
-        private URI completeUri;
-        private URI compensateUri;
-        private URI statusUri;
-        private URI forgetUri;
-        private URI leaveUri;
-
-        public LRAResourceBuilder completeUri(URI completeUri) {
-            this.completeUri = completeUri;
-            return this;
-        }
-
-        public LRAResourceBuilder compensateUri(URI compensateUri) {
-            this.compensateUri = compensateUri;
-            return this;
-        }
-
-        public LRAResourceBuilder statusUri(URI statusUri) {
-            this.statusUri = statusUri;
-            return this;
-        }
-
-        public LRAResourceBuilder forgetUri(URI forgetUri) {
-            this.forgetUri = forgetUri;
-            return this;
-        }
-
-        public LRAResourceBuilder leaveUri(URI leaveUri) {
-            this.leaveUri = leaveUri;
-            return this;
-        }
-        
-        public LRAResource build() {
-            return new LRAResource(completeUri, compensateUri, statusUri, forgetUri, leaveUri);
-        }
-        
     }
 }
