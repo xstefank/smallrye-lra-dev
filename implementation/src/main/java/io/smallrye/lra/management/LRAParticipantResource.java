@@ -7,7 +7,6 @@ import org.eclipse.microprofile.lra.annotation.Status;
 import org.eclipse.microprofile.lra.client.LRAClient;
 
 import javax.inject.Inject;
-import javax.print.attribute.standard.Media;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PUT;
@@ -31,6 +30,14 @@ public class LRAParticipantResource {
 
     @Inject
     private SmallRyeLRAManagement lraManagement;
+    
+    @Context
+    private UriInfo uriInfo;
+    
+    @javax.enterprise.inject.Produces
+    public UriInfo uriInfo() {
+        return uriInfo;
+    }
 
     @PUT
     @Path(PARTICIPANT_PATH + "/compensate")

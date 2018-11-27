@@ -10,8 +10,8 @@ import org.eclipse.microprofile.lra.participant.LRAParticipantDeserializer;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.core.UriInfo;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,13 +29,16 @@ public class SmallRyeLRAManagement implements LRAManagement {
     @Inject
     private LRAClient lraClient;
     
+    @Inject
+    private UriInfo uriInfo;
+    
     @Override
     public String joinLRA(LRAParticipant participant, URL lraId, Long timeLimit, TimeUnit unit) throws JoinLRAException {
         String recoveryUrl;
         String participantId = UUID.randomUUID().toString();
         
         try {
-            String baseUrl = "http://localhost:8180/lra-participant/" + Utils.extractLraId(lraId) + "/" + participantId;
+            String baseUrl = uriInfo.getBaseUri().toString() + "/lra-participant/" + Utils.extractLraId(lraId) + "/" + participantId;
             recoveryUrl = lraClient.joinLRA(lraId, unit.toMillis(timeLimit),
                     new URL(baseUrl + "/compensate"),
                     new URL(baseUrl + "/complete"),
