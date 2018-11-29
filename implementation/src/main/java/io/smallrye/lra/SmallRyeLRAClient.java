@@ -179,7 +179,8 @@ public class SmallRyeLRAClient implements LRAClient {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to get LRA status", null);
             }
 
-            return Optional.of(response.readEntity(CompensatorStatus.class));
+            SmallRyeLRAInfo lraInfo = response.readEntity(SmallRyeLRAInfo.class);
+            return Optional.of(lraInfo.getStatus());
         } catch (ProcessingException e) {
             return Optional.empty();
         } finally {

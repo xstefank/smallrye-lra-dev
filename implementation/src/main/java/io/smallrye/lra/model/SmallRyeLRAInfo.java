@@ -10,7 +10,7 @@ public class SmallRyeLRAInfo implements LRAInfo {
     private int startTime;
     private int finishTime;
     private String clientId;
-    private String status;
+    private CompensatorStatus status;
     private boolean complete;
     private boolean compensated;
     private boolean recovering;
@@ -23,7 +23,7 @@ public class SmallRyeLRAInfo implements LRAInfo {
     public SmallRyeLRAInfo(String lraId, String clientId, CompensatorStatus status, boolean isTopLevel) {
         this.lraId = lraId;
         this.clientId = clientId;
-        this.status = status.toString();
+        this.status = status;
         this.complete = status == CompensatorStatus.Completed;
         this.compensated = status == CompensatorStatus.Compensated;
         this.recovering = status == CompensatorStatus.FailedToComplete || status == CompensatorStatus.FailedToCompensate;
@@ -49,7 +49,7 @@ public class SmallRyeLRAInfo implements LRAInfo {
         return clientId;
     }
 
-    public String getStatus() {
+    public CompensatorStatus getStatus() {
         return status;
     }
 

@@ -22,7 +22,7 @@ public class TCKRunnerITCase {
 
     @Test
     public void runTCK() throws Exception {
-        ProcessBuilder coordinatorPb = new ProcessBuilder("java", "-jar", "lra-coordinator-swarm.jar");
+        ProcessBuilder coordinatorPb = new ProcessBuilder("java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9001", "-jar", "lra-coordinator-swarm.jar");
         coordinatorPb.inheritIO();
         coordinatorPb.directory(new File("."));
         coordinatorPb.redirectOutput(new File("target/coodinator-output.txt"));
@@ -45,7 +45,7 @@ public class TCKRunnerITCase {
         waitForTCK();
 
         System.out.println("Executing TCK run...");
-        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/all");
+        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/managementDelayedResult");
         Response response = target.request().put(null);
 
         destroyProcess(coordinatorProcess);

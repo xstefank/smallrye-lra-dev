@@ -66,12 +66,13 @@ public class SmallRyeLRAParticipant {
             }
 
             if (result == null) {
-                response = Response.ok(completing ? CompensatorStatus.Completed : CompensatorStatus.Completing).build();
+                response = Response.ok(completing ? CompensatorStatus.Completed.name() : CompensatorStatus.Completing.name()).build();
             } else {
                 associatedResults.put(lraId.toExternalForm(), new LRAResult(result, completing));
+                response = Response.accepted(completing ? CompensatorStatus.Completing.name() : CompensatorStatus.Compensating.name()).build();
             }
         } catch (TerminationException | NotFoundException e) {
-            response = Response.ok(completing ? CompensatorStatus.FailedToComplete : CompensatorStatus.FailedToCompensate).build();
+            response = Response.ok(completing ? CompensatorStatus.FailedToComplete.name() : CompensatorStatus.FailedToCompensate.name()).build();
         }
 
         return response;
