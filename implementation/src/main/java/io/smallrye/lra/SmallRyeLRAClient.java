@@ -336,6 +336,10 @@ public class SmallRyeLRAClient implements LRAClient {
         return currentLRA;
     }
 
+    public void setCurrentLRA(URL currentLRA) {
+        this.currentLRA = currentLRA;
+    }
+
     @Override
     public void close() {
         currentLRA = null;

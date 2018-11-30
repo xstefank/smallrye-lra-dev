@@ -15,9 +15,9 @@ import java.io.IOException;
 import java.util.Arrays;
 
 @Provider
-public class LRAResponseFilter implements ContainerResponseFilter {
+public class LRAContainerResponseFilter implements ContainerResponseFilter {
 
-    private static final Logger log = Logger.getLogger(LRAResponseFilter.class);
+    private static final Logger log = Logger.getLogger(LRAContainerResponseFilter.class);
 
     @Inject
     private LRAClient lraClient;
@@ -65,10 +65,10 @@ public class LRAResponseFilter implements ContainerResponseFilter {
 
     private void endLRA(LRAContext lraContext, boolean complete) {
         try {
-            String respone = complete ? lraClient.closeLRA(lraContext.getLraId()) : lraClient.cancelLRA(lraContext.getLraId());
-            log.info("LRA ended successfully: " + respone);
+            String response = complete ? lraClient.closeLRA(lraContext.getLraId()) : lraClient.cancelLRA(lraContext.getLraId());
+            log.info("LRA ended successfully: " + response);
         } catch (NotFoundException e) {
-            log.warnf("LRA %s has already ended", lraContext.getLraId());
+            log.warnf("LRA %s has already probably finished", lraContext.getLraId());
         } catch (GenericLRAException e) {
             log.errorf("Unable to end LRA %s; %s", lraContext.getLraId(), e.getCause().getMessage());
         }

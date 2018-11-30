@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 
 @Provider
-public class LRARequestFilter implements ContainerRequestFilter {
+public class LRAContainerRequestFilter implements ContainerRequestFilter {
 
     @Context
     private ResourceInfo resourceInfo;
@@ -41,13 +41,21 @@ public class LRARequestFilter implements ContainerRequestFilter {
         LRA lra = resourceMethod.getAnnotation(LRA.class);
 
         if (lra == null) {
-            processHelperLRAAnnotations(lraId, requestContext);
+            boolean isHelperMethod = processHelperLRAAnnotations(resourceMethod, lraId, requestContext);
+
+            if (!isHelperMethod && lraId != null) {
+                //invoking non LRA aware resource method with LRA context present so suspend LRA
+                suspendLRA(requestContext, lraContextBuilder, lraId);
+                lraClient.setCurrentLRA(lraId);
+            }
+            
             return;
         }
         
         boolean nested = resourceMethod.getAnnotation(NestedLRA.class) != null;
 
         boolean incomingLRAPresent = lraId != null;
+        boolean shouldJoin = incomingLRAPresent;
         
         switch (lra.value()) {
             
@@ -93,6 +101,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
             case NOT_SUPPORTED:
                 if (incomingLRAPresent) {
                     suspendLRA(requestContext, lraContextBuilder, lraId);
+                    shouldJoin = false;
                 }
                 break;
                 
@@ -106,7 +115,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
         }
 
-        if (lraId != null) {
+        if (shouldJoin) {
             lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), requestContext.getUriInfo().getBaseUri(), null);
         }
 
@@ -126,10 +135,13 @@ public class LRARequestFilter implements ContainerRequestFilter {
         requestContext.getHeaders().remove(LRAClient.LRA_HTTP_HEADER);
     }
 
-    private void processHelperLRAAnnotations(URL lraId, ContainerRequestContext requestContext) {
-        if (resourceInfo.getResourceMethod().isAnnotationPresent(Leave.class)) {
+    private boolean processHelperLRAAnnotations(Method method, URL lraId, ContainerRequestContext requestContext) {
+        if (method.isAnnotationPresent(Leave.class)) {
             lraClient.leaveLRA(lraId, resourceInfo.getResourceClass(), requestContext.getUriInfo().getBaseUri());
-        }
+            return true;
+        } 
+        
+        return false;
     }
 
     private URL startNewLRA(LRAContextBuilder contextBuilder, ContainerRequestContext requestContext) {
