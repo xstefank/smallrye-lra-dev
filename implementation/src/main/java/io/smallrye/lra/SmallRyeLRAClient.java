@@ -5,11 +5,14 @@ import io.smallrye.lra.api.LRARecoveryCoordinator;
 import io.smallrye.lra.model.LRAResource;
 import io.smallrye.lra.model.SmallRyeLRAInfo;
 import io.smallrye.lra.utils.Utils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
 import org.eclipse.microprofile.lra.client.LRAClient;
 import org.eclipse.microprofile.lra.client.LRAInfo;
+import org.eclipse.microprofile.rest.client.RestClientBuilder;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.NotFoundException;
@@ -35,11 +38,25 @@ public class SmallRyeLRAClient implements LRAClient {
 
     private URL currentLRA;
 
-    @Inject
     private LRACoordinator coordinator;
+    private LRARecoveryCoordinator recoveryCoordinator;
     
     @Inject
-    private LRARecoveryCoordinator recoveryCoordinator;
+    @ConfigProperty(name = "lra.coordinator.url")
+    private String coordinatorUrl;
+    
+    @Inject
+    @ConfigProperty(name = "lra.recovery.url")
+    private String recoveryCoordinatorUrl;
+
+    @PostConstruct
+    public void init() throws MalformedURLException {
+        coordinator = RestClientBuilder.newBuilder()
+                .baseUrl(URI.create(coordinatorUrl).toURL()).build(LRACoordinator.class);
+
+        recoveryCoordinator = RestClientBuilder.newBuilder()
+                .baseUrl(URI.create(recoveryCoordinatorUrl).toURL()).build(LRARecoveryCoordinator.class);
+    }
 
     public URL startLRA(URL parentLRA, String clientID, Long timeout) {
         return startLRA(parentLRA, clientID, timeout, TimeUnit.MILLISECONDS);

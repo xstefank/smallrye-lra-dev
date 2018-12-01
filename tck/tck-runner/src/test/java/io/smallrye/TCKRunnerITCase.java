@@ -33,8 +33,8 @@ public class TCKRunnerITCase {
                 "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=9000",
                 "-jar",
                 "tck-client-thorntail.jar", "-Dswarm.port.offset=100",
-                "-Dio.smallrye.lra.api.LRACoordinator/mp-rest/url=http://localhost:8080",
-                "-Dio.smallrye.lra.api.LRARecoveryCoordinator/mp-rest/url=http://localhost:8080",
+                "-Dlra.coordinator.url=http://localhost:8080",
+                "-Dlra.recovery.url=http://localhost:8080",
                 "-Dservice.http.port=8180",
                 "-Dlra.http.port=8080");
         TCKClientPb.inheritIO();
