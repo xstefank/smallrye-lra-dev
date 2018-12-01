@@ -224,7 +224,7 @@ public class SmallRyeLRAClient implements LRAClient {
         Response response = null;
 
         try {
-            String linkHeader = new LRAResource(compensateUrl, completeUrl, statusUrl, forgetUrl, leaveUrl).asLinkHeader();
+            String linkHeader = LRAResource.createLinkHeader(compensateUrl, completeUrl, statusUrl, forgetUrl, leaveUrl);
             response = coordinator.joinLRA(Utils.extractLraId(lraId), timelimit,
                     lraId.toString(),
                     linkHeader,
@@ -269,7 +269,7 @@ public class SmallRyeLRAClient implements LRAClient {
         String[] paths = recoveryUrl.toExternalForm().split("/");
         try {
             response = recoveryCoordinator.updateCompensator(paths[paths.length - 2], paths[paths.length - 1],
-                    new LRAResource(compensateUrl, completeUrl, statusUrl, forgetUrl, null).asLinkHeader());
+                    LRAResource.createLinkHeader(compensateUrl, completeUrl, forgetUrl, forgetUrl, statusUrl));
             
             return new URL(response.readEntity(String.class));
         } catch (MalformedURLException e) {
