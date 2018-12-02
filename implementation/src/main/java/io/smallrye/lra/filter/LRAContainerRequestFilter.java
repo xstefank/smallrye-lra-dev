@@ -2,9 +2,13 @@ package io.smallrye.lra.filter;
 
 import io.smallrye.lra.SmallRyeLRAClient;
 import io.smallrye.lra.model.LRAConstants;
+import org.eclipse.microprofile.lra.annotation.Compensate;
+import org.eclipse.microprofile.lra.annotation.Complete;
+import org.eclipse.microprofile.lra.annotation.Forget;
 import org.eclipse.microprofile.lra.annotation.LRA;
 import org.eclipse.microprofile.lra.annotation.Leave;
 import org.eclipse.microprofile.lra.annotation.NestedLRA;
+import org.eclipse.microprofile.lra.annotation.Status;
 import org.eclipse.microprofile.lra.annotation.TimeLimit;
 import org.eclipse.microprofile.lra.client.LRAClient;
 
@@ -21,7 +25,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 
 @Provider
-public class LRARequestFilter implements ContainerRequestFilter {
+public class LRAContainerRequestFilter implements ContainerRequestFilter {
 
     @Context
     private ResourceInfo resourceInfo;
@@ -36,12 +40,16 @@ public class LRARequestFilter implements ContainerRequestFilter {
 
         String lraHeader = requestContext.getHeaderString(LRAClient.LRA_HTTP_HEADER);
         URL lraId = lraHeader != null ? new URL(lraHeader) : null;
-        lraContextBuilder.lraId(lraId);
 
         LRA lra = resourceMethod.getAnnotation(LRA.class);
 
         if (lra == null) {
-            processHelperLRAAnnotations(lraId, requestContext);
+            boolean isHelperMethod = processHelperLRAAnnotations(resourceMethod, lraId, requestContext);
+            if (!isHelperMethod && lraId != null) {
+                //invoking non LRA aware resource method with LRA context present so suspend LRA
+                suspendLRA(requestContext, lraContextBuilder, lraId);
+                lraClient.setCurrentLRA(lraId);
+            }
             return;
         }
         
@@ -93,6 +101,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
             case NOT_SUPPORTED:
                 if (incomingLRAPresent) {
                     suspendLRA(requestContext, lraContextBuilder, lraId);
+                    lraId = null;
                 }
                 break;
                 
@@ -118,6 +127,7 @@ public class LRARequestFilter implements ContainerRequestFilter {
             lraContextBuilder.cancelOn(lra.cancelOn());
         }
 
+        lraContextBuilder.lraId(lraId);
         requestContext.setProperty(LRAContext.CONTEXT_PROPERTY_NAME, lraContextBuilder.build());
     }
 
@@ -126,10 +136,15 @@ public class LRARequestFilter implements ContainerRequestFilter {
         requestContext.getHeaders().remove(LRAClient.LRA_HTTP_HEADER);
     }
 
-    private void processHelperLRAAnnotations(URL lraId, ContainerRequestContext requestContext) {
-        if (resourceInfo.getResourceMethod().isAnnotationPresent(Leave.class)) {
+    private boolean processHelperLRAAnnotations(Method method, URL lraId, ContainerRequestContext requestContext) {
+        if (method.isAnnotationPresent(Leave.class)) {
             lraClient.leaveLRA(lraId, resourceInfo.getResourceClass(), requestContext.getUriInfo().getBaseUri());
-        }
+            return true;
+        } else return method.isAnnotationPresent(Compensate.class) ||
+                method.isAnnotationPresent(Complete.class) ||
+                method.isAnnotationPresent(Status.class) ||
+                method.isAnnotationPresent(Forget.class);
+
     }
 
     private URL startNewLRA(LRAContextBuilder contextBuilder, ContainerRequestContext requestContext) {

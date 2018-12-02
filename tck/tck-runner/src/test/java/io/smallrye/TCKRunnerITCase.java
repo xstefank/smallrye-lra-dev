@@ -45,7 +45,7 @@ public class TCKRunnerITCase {
         waitForTCK();
 
         System.out.println("Executing TCK run...");
-        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/managementDelayedResult");
+        WebTarget target = ClientBuilder.newClient().target("http://localhost:8180/tck/all");
         Response response = target.request().put(null);
 
         destroyProcess(coordinatorProcess);

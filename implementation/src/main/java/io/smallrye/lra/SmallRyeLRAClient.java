@@ -122,6 +122,7 @@ public class SmallRyeLRAClient implements LRAClient {
                         + (close ? "confirmation" : "compensation"), null);
             }
 
+            currentLRA = null;
             return response.readEntity(String.class);
         } catch (WebApplicationException t) {
             throw new NotFoundException("Unable to find LRA: " + lraId);
@@ -351,6 +352,10 @@ public class SmallRyeLRAClient implements LRAClient {
     @Override
     public URL getCurrent() {
         return currentLRA;
+    }
+
+    public void setCurrentLRA(URL currentLRA) {
+        this.currentLRA = currentLRA;
     }
 
     @Override
