@@ -43,19 +43,19 @@ public class SmallRyeLRAClient implements LRAClient {
     
     @Inject
     @ConfigProperty(name = "lra.coordinator.url")
-    private String coordinatorUrl;
+    private URL coordinatorUrl;
     
     @Inject
     @ConfigProperty(name = "lra.recovery.url")
-    private String recoveryCoordinatorUrl;
+    private URL recoveryCoordinatorUrl;
 
     @PostConstruct
     public void init() throws MalformedURLException {
         coordinator = RestClientBuilder.newBuilder()
-                .baseUrl(URI.create(coordinatorUrl).toURL()).build(LRACoordinator.class);
+                .baseUrl(coordinatorUrl).build(LRACoordinator.class);
 
         recoveryCoordinator = RestClientBuilder.newBuilder()
-                .baseUrl(URI.create(recoveryCoordinatorUrl).toURL()).build(LRARecoveryCoordinator.class);
+                .baseUrl(recoveryCoordinatorUrl).build(LRARecoveryCoordinator.class);
     }
 
     public URL startLRA(URL parentLRA, String clientID, Long timeout) {
