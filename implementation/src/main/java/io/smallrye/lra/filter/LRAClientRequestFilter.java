@@ -10,7 +10,7 @@ import javax.ws.rs.client.ClientRequestFilter;
 import java.io.IOException;
 
 public class LRAClientRequestFilter implements ClientRequestFilter {
-    
+
     private String coordinatorURL;
     private String recoveryURL;
 
@@ -24,10 +24,11 @@ public class LRAClientRequestFilter implements ClientRequestFilter {
     public void filter(ClientRequestContext requestContext) throws IOException {
 
         String uri = requestContext.getUri().toString();
-        if (uri.startsWith(coordinatorURL) || uri.startsWith(recoveryURL)) {
+        if (uri.startsWith(coordinatorURL) || uri.startsWith(recoveryURL) ||
+                requestContext.getHeaders().containsKey(LRAClient.LRA_HTTP_HEADER)) {
             return;
         }
-        
+
         // necessary as RestEasy currently requires ClientRequestFilter
         // to be registered manually
         LRAClient lraClient = CDI.current().select(LRAClient.class).get();
