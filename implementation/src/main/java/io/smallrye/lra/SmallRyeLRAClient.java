@@ -252,7 +252,7 @@ public class SmallRyeLRAClient implements LRAClient {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to join LRA", null);
             }
 
-            return response.readEntity(String.class);
+            return response.getHeaderString(LRAClient.LRA_HTTP_RECOVERY_HEADER);
         } catch (WebApplicationException e) {
             throw new GenericLRAException(lraId, response != null ? response.getStatus() : -1,
                     "Unable to join LRA because it is probably already completed or compensated", e);
