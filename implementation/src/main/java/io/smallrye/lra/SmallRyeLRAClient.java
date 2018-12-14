@@ -26,6 +26,8 @@ import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,16 +61,16 @@ public class SmallRyeLRAClient implements LRAClient {
     }
 
     public URL startLRA(URL parentLRA, String clientID, Long timeout) {
-        return startLRA(parentLRA, clientID, timeout, TimeUnit.MILLISECONDS);
+        return startLRA(parentLRA, clientID, timeout, ChronoUnit.MILLIS);
     }
 
     @Override
-    public URL startLRA(URL parentLRA, String clientID, Long timeout, TimeUnit unit) throws GenericLRAException {
+    public URL startLRA(URL parentLRA, String clientID, Long timeout, ChronoUnit unit) throws GenericLRAException {
         Response response = null;
 
         try {
             response = coordinator.startLRA(parentLRA != null ? parentLRA.toExternalForm() : null,
-                    clientID, unit.toMillis(timeout));
+                    clientID, Duration.of(timeout, unit).toMillis());
 
             if (parentLRA != null && response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
                 throw new NotFoundException("Unable to start nested LRA for parent: " + parentLRA);
@@ -91,12 +93,22 @@ public class SmallRyeLRAClient implements LRAClient {
     }
 
     public URL startLRA(String clientId, Long timeout) {
-        return startLRA(clientId, timeout, TimeUnit.MILLISECONDS);
+        return startLRA(clientId, timeout, ChronoUnit.MILLIS);
     }
 
     @Override
-    public URL startLRA(String clientID, Long timeout, TimeUnit unit) throws GenericLRAException {
+    public URL startLRA(String clientID, Long timeout, ChronoUnit unit) throws GenericLRAException {
         return startLRA(null, clientID, timeout, unit);
+    }
+
+    @Override
+    public URL startLRA(String clientID, Long timeout, ChronoUnit unit, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
+        URL lraId = startLRA(clientID, timeout, unit);
+        try {
+            return new URL(joinLRA(lraId, resourceClass, baseUri, compensatorData));
+        } catch (MalformedURLException e) {
+            return null;
+        }
     }
 
     @Override
@@ -235,8 +247,7 @@ public class SmallRyeLRAClient implements LRAClient {
     public Boolean isCompletedLRA(URL lraId) throws GenericLRAException {
         return getStatus(lraId).orElseGet(() -> null) == CompensatorStatus.Completed;
     }
-
-    @Override
+    
     public String joinLRA(URL lraId, Long timelimit, URL compensateUrl, URL completeUrl, URL forgetUrl, URL leaveUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
         Objects.requireNonNull(lraId);
         Response response = null;
@@ -265,39 +276,35 @@ public class SmallRyeLRAClient implements LRAClient {
 
     @Override
     public String joinLRA(URL lraId, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
+        Objects.requireNonNull(lraId);
+        Response response = null;
+
         try {
             LRAResource resource = new LRAResource(resourceClass, baseUri);
-            return joinLRA(lraId, resource.getCompensateTimeLimit(),
-                    resource.getCompensateUrl(),
-                    resource.getCompleteUrl(),
-                    resource.getForgetUrl(),
-                    resource.getLeaveUrl(),
-                    resource.getStatusUrl(),
+
+            String linkHeader = resource.asLinkHeader();
+            response = coordinator.joinLRA(Utils.extractLraId(lraId), resource.getCompensateTimeLimit(),
+                    lraId.toString(),
+                    linkHeader,
                     compensatorData);
+
+            if (isInvalidResponse(response)) {
+                throw new GenericLRAException(lraId, response.getStatus(), "Unable to join LRA", null);
+            }
+
+            return response.getHeaderString(LRAClient.LRA_HTTP_RECOVERY_HEADER);
         } catch (IllegalArgumentException | MalformedURLException e) {
             throw new GenericLRAException(lraId, -1, e.getMessage(), e);
-        }
-    }
-
-    @Override
-    public URL updateCompensator(URL recoveryUrl, URL compensateUrl, URL completeUrl, URL forgetUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
-        Objects.requireNonNull(recoveryUrl);
-        Response response = null;
-        
-        String[] paths = recoveryUrl.toExternalForm().split("/");
-        try {
-            response = recoveryCoordinator.updateCompensator(paths[paths.length - 2], paths[paths.length - 1],
-                    LRAResource.createLinkHeader(compensateUrl, completeUrl, forgetUrl, forgetUrl, statusUrl));
-            
-            return new URL(response.readEntity(String.class));
-        } catch (MalformedURLException e) {
-            throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
-                    "Unable to update compensator " + recoveryUrl, e);
+        } catch (WebApplicationException e) {
+            throw new GenericLRAException(lraId, response != null ? response.getStatus() : -1,
+                    "Unable to join LRA because it is probably already completed or compensated", e);
+        } catch (Throwable t) {
+            throw new GenericLRAException(lraId, -1, "Unable to join LRA", t);
         } finally {
             if (response != null) response.close();
         }
     }
-
+    
     public void leaveLRA(URL lraId, Class<?> resourceClass, URI baseUri) throws GenericLRAException {
         try {
             LRAResource lraResource = new LRAResource(resourceClass, baseUri);
@@ -334,12 +341,12 @@ public class SmallRyeLRAClient implements LRAClient {
     }
 
     @Override
-    public void renewTimeLimit(URL lraId, long limit, TimeUnit unit) {
+    public void renewTimeLimit(URL lraId, long limit, ChronoUnit unit) {
         Objects.requireNonNull(lraId);
         Response response = null;
 
         try {
-            response = coordinator.renewTimeLimit(Utils.extractLraId(lraId), unit.toMillis(limit));
+            response = coordinator.renewTimeLimit(Utils.extractLraId(lraId), Duration.of(limit, unit).toMillis());
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to renew timelimit", null);

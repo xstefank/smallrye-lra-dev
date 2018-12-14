@@ -9,7 +9,6 @@ import org.eclipse.microprofile.lra.annotation.LRA;
 import org.eclipse.microprofile.lra.annotation.Leave;
 import org.eclipse.microprofile.lra.annotation.NestedLRA;
 import org.eclipse.microprofile.lra.annotation.Status;
-import org.eclipse.microprofile.lra.annotation.TimeLimit;
 import org.eclipse.microprofile.lra.client.LRAClient;
 
 import javax.inject.Inject;
@@ -23,6 +22,7 @@ import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.time.Duration;
 
 @Provider
 public class LRAContainerRequestFilter implements ContainerRequestFilter {
@@ -167,14 +167,13 @@ public class LRAContainerRequestFilter implements ContainerRequestFilter {
     }
 
     private long getTimeLimit() {
-        TimeLimit timeLimit = resourceInfo.getResourceMethod().getAnnotation(TimeLimit.class);
-        if (timeLimit == null) timeLimit = resourceInfo.getResourceClass().getAnnotation(TimeLimit.class);
+        LRA lra = resourceInfo.getResourceMethod().getAnnotation(LRA.class);
 
-        if (timeLimit == null) {
+        if (lra == null) {
             return LRAConstants.DEFAULT_TIMELIMIT;
         }
 
-        return timeLimit.unit().toMillis(timeLimit.limit());
+        return Duration.of(lra.timeLimit(), lra.timeUnit()).toMillis();
     }
 
 }

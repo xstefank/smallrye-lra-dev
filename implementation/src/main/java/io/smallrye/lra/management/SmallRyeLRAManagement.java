@@ -1,5 +1,6 @@
 package io.smallrye.lra.management;
 
+import io.smallrye.lra.SmallRyeLRAClient;
 import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
 import org.eclipse.microprofile.lra.client.LRAClient;
@@ -13,6 +14,8 @@ import javax.inject.Inject;
 import javax.ws.rs.core.UriInfo;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,19 +30,19 @@ public class SmallRyeLRAManagement implements LRAManagement {
     private static final List<LRAParticipantDeserializer> deserializers = new ArrayList<>();
     
     @Inject
-    private LRAClient lraClient;
+    private SmallRyeLRAClient lraClient;
     
     @Inject
     private UriInfo uriInfo;
     
     @Override
-    public String joinLRA(LRAParticipant participant, URL lraId, Long timeLimit, TimeUnit unit) throws JoinLRAException {
+    public String joinLRA(LRAParticipant participant, URL lraId, Long timeLimit, ChronoUnit unit) throws JoinLRAException {
         String recoveryUrl;
         String participantId = UUID.randomUUID().toString();
         
         try {
             String baseUrl = uriInfo.getBaseUri().toString() + "/lra-participant/" + Utils.extractLraId(lraId) + "/" + participantId;
-            recoveryUrl = lraClient.joinLRA(lraId, unit.toMillis(timeLimit),
+            recoveryUrl = lraClient.joinLRA(lraId, Duration.of(timeLimit, unit).toMillis(),
                     new URL(baseUrl + "/compensate"),
                     new URL(baseUrl + "/complete"),
                     new URL(baseUrl), new URL(baseUrl),
@@ -56,7 +59,7 @@ public class SmallRyeLRAManagement implements LRAManagement {
 
     @Override
     public String joinLRA(LRAParticipant participant, URL lraId) throws JoinLRAException {
-        return joinLRA(participant, lraId, 0L, TimeUnit.SECONDS);
+        return joinLRA(participant, lraId, 0L, ChronoUnit.SECONDS);
     }
 
     @Override

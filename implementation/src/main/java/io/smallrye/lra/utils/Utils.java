@@ -1,7 +1,7 @@
 package io.smallrye.lra.utils;
 
 import java.net.URL;
-import java.util.concurrent.TimeUnit;
+import java.time.temporal.ChronoUnit;
 
 public class Utils {
 
@@ -9,7 +9,7 @@ public class Utils {
         return lra != null ? lra.toExternalForm().replaceFirst(".*/([^/?]+).*", "$1") : null;
     }
 
-    public static String getFormattedString(URL parentLRA, String clientID, Long timeout, TimeUnit unit) {
+    public static String getFormattedString(URL parentLRA, String clientID, Long timeout, ChronoUnit unit) {
         return String.format("[parentLRA = %s, clientID = %s, timeout = %s, unit = %s]",
                 parentLRA, clientID, timeout, unit);
     }

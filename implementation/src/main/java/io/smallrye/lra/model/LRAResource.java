@@ -5,7 +5,6 @@ import org.eclipse.microprofile.lra.annotation.Complete;
 import org.eclipse.microprofile.lra.annotation.Forget;
 import org.eclipse.microprofile.lra.annotation.Leave;
 import org.eclipse.microprofile.lra.annotation.Status;
-import org.eclipse.microprofile.lra.annotation.TimeLimit;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Link;
@@ -15,6 +14,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.time.Duration;
 
 public class LRAResource {
 
@@ -24,19 +24,31 @@ public class LRAResource {
     private URL forgetUrl;
     private URL leaveUrl;
     private Long compensateTimeLimit;
+    private Long completeTimeLimit;
+
+    public LRAResource(URL compensateUrl, URL completeUrl, URL statusUrl, URL forgetUrl, URL leaveUrl) {
+        this.compensateUrl = compensateUrl;
+        this.completeUrl = completeUrl;
+        this.statusUrl = statusUrl;
+        this.forgetUrl = forgetUrl;
+        this.leaveUrl = leaveUrl;
+    }
 
     public LRAResource(Class<?> resourceClass, URI baseUri) throws MalformedURLException {
         Path resourcePath = resourceClass.getAnnotation(Path.class);
+        Complete complete;
+        Compensate compensate;
 
         String  baseResourceUri = UriBuilder.fromUri(baseUri).path(resourcePath != null ? resourcePath.value() : "").build().toString();
-
+        
         for (Method method : resourceClass.getMethods()) {
 
-            if (method.getAnnotation(Complete.class) != null && completeUrl == null) {
+            if ((complete = method.getAnnotation(Complete.class)) != null && completeUrl == null) {
                 completeUrl = new URL(baseResourceUri + getPath(method));
-            } else if (method.getAnnotation(Compensate.class) != null && compensateUrl == null) {
+                completeTimeLimit = Duration.of(complete.timeLimit(), complete.timeUnit()).toMillis();
+            } else if ((compensate = method.getAnnotation(Compensate.class)) != null && compensateUrl == null) {
                 compensateUrl = new URL(baseResourceUri + getPath(method));
-                compensateTimeLimit = getTimeLimit(method);
+                compensateTimeLimit = Duration.of(compensate.timeLimit(), compensate.timeUnit()).toMillis();
             } else if (method.getAnnotation(Status.class) != null && statusUrl == null) {
                 statusUrl = new URL(baseResourceUri + getPath(method));
             } else if (method.getAnnotation(Forget.class) != null && forgetUrl == null) { 
@@ -44,16 +56,6 @@ public class LRAResource {
             } else if (method.getAnnotation(Leave.class) != null && leaveUrl == null) {
                 leaveUrl = new URL(baseResourceUri + getPath(method));
             }
-        }
-    }
-
-    private long getTimeLimit(Method method) {
-        TimeLimit timeLimit = method.getAnnotation(TimeLimit.class);
-
-        if (timeLimit != null) {
-            return timeLimit.unit().toMillis(timeLimit.limit());
-        } else {
-            return 0L;
         }
     }
 
@@ -88,6 +90,10 @@ public class LRAResource {
 
     public Long getCompensateTimeLimit() {
         return compensateTimeLimit;
+    }
+
+    public Long getCompleteTimeLimit() {
+        return completeTimeLimit;
     }
 
     @Override
