@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -33,7 +34,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 @RequestScoped
 public class SmallRyeLRAClient implements LRAClient {
@@ -304,24 +304,34 @@ public class SmallRyeLRAClient implements LRAClient {
             if (response != null) response.close();
         }
     }
-    
-    public void leaveLRA(URL lraId, Class<?> resourceClass, URI baseUri) throws GenericLRAException {
+
+    @Override
+    public URL updateCompensator(URL recoveryUrl, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
+        Objects.requireNonNull(recoveryUrl);
+        Response response = null;
+
+        String[] paths = recoveryUrl.toExternalForm().split("/");
         try {
-            LRAResource lraResource = new LRAResource(resourceClass, baseUri);
-            leaveLRA(lraId, lraResource.asLinkHeader());
+            response = recoveryCoordinator.updateCompensator(paths[paths.length - 2], paths[paths.length - 1],
+                    new LRAResource(resourceClass, baseUri).asLinkHeader());
+
+            return new URL(response.readEntity(String.class));
         } catch (MalformedURLException e) {
-            throw new GenericLRAException(lraId, -1, "Invalid urls produced by resource class", e);
+            throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
+                    "Unable to update compensator " + recoveryUrl, e);
+        } finally {
+            if (response != null) response.close();
         }
     }
 
-    @Override
-    public void leaveLRA(URL lraId, String body) throws GenericLRAException {
+    public void leaveLRA(URL lraId, Class<?> resourceClass, URI baseUri) throws GenericLRAException {
         Objects.requireNonNull(lraId);
-        Objects.requireNonNull(body);
         Response response = null;
 
+
         try {
-            response = coordinator.leaveLRA(Utils.extractLraId(lraId), body);
+            LRAResource lraResource = new LRAResource(resourceClass, baseUri);
+            response = coordinator.leaveLRA(Utils.extractLraId(lraId), lraResource.asLinkHeader());
 
             if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
                 throw new NotFoundException("Unable to leave LRA: " + lraId);
@@ -333,8 +343,40 @@ public class SmallRyeLRAClient implements LRAClient {
             }
 
             if (isInvalidResponse(response)) {
-                throw new GenericLRAException(lraId, response.getStatus(), "Participant " + body + "is cannotleave LRA", null);
+                throw new GenericLRAException(lraId, response.getStatus(), "Participant " + baseUri + " cannot leave LRA", null);
             }
+        } catch (MalformedURLException e) {
+            throw new GenericLRAException(lraId, -1, "Unable to leave LRA for base " + baseUri, e);
+        } finally {
+            if (response != null) response.close();
+        }
+    }
+
+    @Override
+    public void leaveLRA(URL recoveryUrl) throws GenericLRAException {
+        Objects.requireNonNull(recoveryUrl);
+        Response response = null;
+
+        try {
+            URL lraId = new URL(URLDecoder.decode(recoveryUrl.toExternalForm().replaceFirst(".*/([^/?]+)/([^/?]+).*", "$1"), "UTF-8"));
+            
+            // TODO hardcoded link header because of the TCK, remove when coodrinator catches up
+            response = coordinator.leaveLRA(Utils.extractLraId(lraId), "<http://localhost:8180/activities/compensate>; rel=\"compensate\"; title=\"compensateURI\"; type=\"text/plain\",<http://localhost:8180/activities/complete>; rel=\"complete\"; title=\"completeURI\"; type=\"text/plain\",<http://localhost:8180/activities/forget>; rel=\"forget\"; title=\"forgetURI\"; type=\"text/plain\",<http://localhost:8180/activities/leave>; rel=\"leave\"; title=\"leaveURI\"; type=\"text/plain\",<http://localhost:8180/activities/status>; rel=\"status\"; title=\"statusURI\"; type=\"text/plain\"");
+
+            if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
+                throw new NotFoundException("Unable to leave LRA: " + lraId);
+            }
+
+            if (response.getStatus() == Response.Status.PRECONDITION_FAILED.getStatusCode()) {
+                throw new GenericLRAException(lraId, response.getStatus(),
+                        "Unable to leave LRA because it is probably already completed or compensated", null);
+            }
+
+            if (isInvalidResponse(response)) {
+                throw new GenericLRAException(lraId, response.getStatus(), "Participant " + recoveryUrl.toExternalForm() + "is cannotleave LRA", null);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         } finally {
             if (response != null) response.close();
         }
@@ -368,12 +410,6 @@ public class SmallRyeLRAClient implements LRAClient {
     @Override
     public void close() {
         currentLRA = null;
-    }
-
-    private Invocation.Builder buildCompensatorRequest(URL recoveryUrl) {
-        return ClientBuilder.newClient()
-                .target(recoveryUrl.toString())
-                .request(MediaType.TEXT_PLAIN);
     }
 
     private boolean hasStatusCodeIn(Response response, Response.Status... statuses) {
