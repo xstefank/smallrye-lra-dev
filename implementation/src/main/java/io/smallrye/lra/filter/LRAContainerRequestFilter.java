@@ -116,8 +116,8 @@ public class LRAContainerRequestFilter implements ContainerRequestFilter {
         }
 
         if (lraId != null) {
-            String receiverUrl = lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), requestContext.getUriInfo().getBaseUri(), null);
-            requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_RECOVERY_HEADER, receiverUrl);
+            URL receiverUrl = lraClient.joinLRA(lraId, resourceInfo.getResourceClass(), requestContext.getUriInfo().getBaseUri(), null);
+            requestContext.getHeaders().putSingle(LRAClient.LRA_HTTP_RECOVERY_HEADER, receiverUrl.toExternalForm());
         }
 
         if (lra.cancelOnFamily().length != 0) {

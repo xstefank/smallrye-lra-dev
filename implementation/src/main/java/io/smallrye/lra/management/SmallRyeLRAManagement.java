@@ -3,11 +3,9 @@ package io.smallrye.lra.management;
 import io.smallrye.lra.SmallRyeLRAClient;
 import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
-import org.eclipse.microprofile.lra.client.LRAClient;
 import org.eclipse.microprofile.lra.participant.JoinLRAException;
 import org.eclipse.microprofile.lra.participant.LRAManagement;
 import org.eclipse.microprofile.lra.participant.LRAParticipant;
-import org.eclipse.microprofile.lra.participant.LRAParticipantDeserializer;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -16,18 +14,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
 public class SmallRyeLRAManagement implements LRAManagement {
     
     private static final Map<String, SmallRyeLRAParticipant> participants = new HashMap<>();
-    private static final List<LRAParticipantDeserializer> deserializers = new ArrayList<>();
     
     @Inject
     private SmallRyeLRAClient lraClient;
@@ -36,8 +30,8 @@ public class SmallRyeLRAManagement implements LRAManagement {
     private UriInfo uriInfo;
     
     @Override
-    public String joinLRA(LRAParticipant participant, URL lraId, Long timeLimit, ChronoUnit unit) throws JoinLRAException {
-        String recoveryUrl;
+    public URL joinLRA(LRAParticipant participant, URL lraId, Long timeLimit, ChronoUnit unit) throws JoinLRAException {
+        URL recoveryUrl;
         String participantId = UUID.randomUUID().toString();
         
         try {
@@ -58,35 +52,12 @@ public class SmallRyeLRAManagement implements LRAManagement {
     }
 
     @Override
-    public String joinLRA(LRAParticipant participant, URL lraId) throws JoinLRAException {
+    public URL joinLRA(LRAParticipant participant, URL lraId) throws JoinLRAException {
         return joinLRA(participant, lraId, 0L, ChronoUnit.SECONDS);
     }
-
-    @Override
-    public void registerDeserializer(LRAParticipantDeserializer deserializer) {
-        deserializers.add(deserializer);
-    }
-
-    @Override
-    public void unregisterDeserializer(LRAParticipantDeserializer deserializer) {
-        deserializers.remove(deserializer);
-    }
+    
 
     public SmallRyeLRAParticipant getParticipant(String participantId, URL lraId, byte[] data) {
-        SmallRyeLRAParticipant participant = participants.get(participantId);
-
-        if (participant == null) {
-            for (LRAParticipantDeserializer deserializer : deserializers) {
-                LRAParticipant lraParticipant = deserializer.deserialize(lraId, data);
-
-                if (lraParticipant != null) {
-                    participant = new SmallRyeLRAParticipant(lraParticipant);
-                    participants.put(participantId, participant);
-                    break;
-                }
-            }
-        }
-        
-        return participant;
+        return participants.get(participantId);
     }
 }

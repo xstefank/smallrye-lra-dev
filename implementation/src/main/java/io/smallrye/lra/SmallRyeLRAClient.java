@@ -102,16 +102,6 @@ public class SmallRyeLRAClient implements LRAClient {
     }
 
     @Override
-    public URL startLRA(String clientID, Long timeout, ChronoUnit unit, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
-        URL lraId = startLRA(clientID, timeout, unit);
-        try {
-            return new URL(joinLRA(lraId, resourceClass, baseUri, compensatorData));
-        } catch (MalformedURLException e) {
-            return null;
-        }
-    }
-
-    @Override
     public String cancelLRA(URL lraId) throws GenericLRAException {
         return endLRA(lraId, false);
     }
@@ -248,7 +238,7 @@ public class SmallRyeLRAClient implements LRAClient {
         return getStatus(lraId).orElseGet(() -> null) == CompensatorStatus.Completed;
     }
     
-    public String joinLRA(URL lraId, Long timelimit, URL compensateUrl, URL completeUrl, URL forgetUrl, URL leaveUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
+    public URL joinLRA(URL lraId, Long timelimit, URL compensateUrl, URL completeUrl, URL forgetUrl, URL leaveUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
         Objects.requireNonNull(lraId);
         Response response = null;
 
@@ -263,7 +253,7 @@ public class SmallRyeLRAClient implements LRAClient {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to join LRA", null);
             }
 
-            return response.getHeaderString(LRAClient.LRA_HTTP_RECOVERY_HEADER);
+            return new URL(response.getHeaderString(LRAClient.LRA_HTTP_RECOVERY_HEADER));
         } catch (WebApplicationException e) {
             throw new GenericLRAException(lraId, response != null ? response.getStatus() : -1,
                     "Unable to join LRA because it is probably already completed or compensated", e);
@@ -275,7 +265,7 @@ public class SmallRyeLRAClient implements LRAClient {
     }
 
     @Override
-    public String joinLRA(URL lraId, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
+    public URL joinLRA(URL lraId, Class<?> resourceClass, URI baseUri, String compensatorData) throws GenericLRAException {
         Objects.requireNonNull(lraId);
         Response response = null;
 
@@ -292,7 +282,7 @@ public class SmallRyeLRAClient implements LRAClient {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to join LRA", null);
             }
 
-            return response.getHeaderString(LRAClient.LRA_HTTP_RECOVERY_HEADER);
+            return new URL(response.getHeaderString(LRAClient.LRA_HTTP_RECOVERY_HEADER));
         } catch (IllegalArgumentException | MalformedURLException e) {
             throw new GenericLRAException(lraId, -1, e.getMessage(), e);
         } catch (WebApplicationException e) {
