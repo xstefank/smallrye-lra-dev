@@ -1,7 +1,7 @@
 #!/bin/bash
 
 BASEDIR=.
-NARAYANA_VERSION=5.9.0.Final
+NARAYANA_VERSION=5.9.2.Final
 
 if [ -f $BASEDIR/lra-coordinator-swarm.jar ]; then
     echo "Coordinator already downloaded at $BASEDIR/lra-coordinator-swarm.jar"

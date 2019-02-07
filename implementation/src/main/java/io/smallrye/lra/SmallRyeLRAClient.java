@@ -200,7 +200,7 @@ public class SmallRyeLRAClient implements LRAClient {
             }
 
             SmallRyeLRAInfo lraInfo = response.readEntity(SmallRyeLRAInfo.class);
-            return Optional.of(lraInfo.getStatus());
+            return Optional.of(CompensatorStatus.valueOf(lraInfo.getStatus()));
         } catch (ProcessingException e) {
             return Optional.empty();
         } finally {
