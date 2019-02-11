@@ -6,10 +6,9 @@ import io.smallrye.lra.model.LRAResource;
 import io.smallrye.lra.model.SmallRyeLRAInfo;
 import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
+import org.eclipse.microprofile.lra.annotation.LRAStatus;
 import org.eclipse.microprofile.lra.client.GenericLRAException;
 import org.eclipse.microprofile.lra.client.LRAClient;
-import org.eclipse.microprofile.lra.client.LRAInfo;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 
 import javax.annotation.PostConstruct;
@@ -18,10 +17,6 @@ import javax.inject.Inject;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -29,11 +24,8 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @RequestScoped
 public class SmallRyeLRAClient implements LRAClient {
@@ -134,61 +126,7 @@ public class SmallRyeLRAClient implements LRAClient {
     }
 
     @Override
-    public List<LRAInfo> getActiveLRAs() throws GenericLRAException {
-        return getLRAs(null);
-    }
-
-    @Override
-    public List<LRAInfo> getAllLRAs() throws GenericLRAException {
-        return getLRAs(null);
-    }
-
-    private List<LRAInfo> getLRAs(CompensatorStatus status) {
-        Response response = null;
-
-        try {
-            response = status == null ? coordinator.getAllLRAs() : coordinator.getAllLRAs(status.name());
-
-            if (isInvalidResponse(response)) {
-                throw new GenericLRAException(null, response.getStatus(),
-                        String.format("Unable to get %s LRAs", status == null ? "all" : status), null);
-            }
-
-            List<SmallRyeLRAInfo> smallRyeLRAInfos = response.readEntity(new GenericType<List<SmallRyeLRAInfo>>() {});
-            return new ArrayList<>(smallRyeLRAInfos);
-        } catch (ProcessingException e) {
-            throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
-                    String.format("Invalid content received for %s LRAs", status == null ? "all" : status), e);
-        } finally {
-            if (response != null) response.close();
-        }
-    }
-
-    @Override
-    public List<LRAInfo> getRecoveringLRAs() throws GenericLRAException {
-        Response response = null;
-
-        try {
-            response = recoveryCoordinator.getRecoveringLRAs();
-
-            if (isInvalidResponse(response)) {
-                throw new GenericLRAException(null, response.getStatus(),
-                        "Unable to get recovering LRAs", null);
-            }
-
-            List<SmallRyeLRAInfo> smallRyeLRAInfos = response.readEntity(new GenericType<List<SmallRyeLRAInfo>>() {
-            });
-            return new ArrayList<>(smallRyeLRAInfos);
-        } catch (ProcessingException e) {
-            throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
-                    "Invalid content received for recovering LRAs", e);
-        } finally {
-            if (response != null) response.close();
-        }
-    }
-
-    @Override
-    public Optional<CompensatorStatus> getStatus(URL lraId) throws GenericLRAException {
+    public LRAStatus getStatus(URL lraId) throws GenericLRAException {
         Objects.requireNonNull(lraId);
         Response response = null;
 
@@ -200,44 +138,14 @@ public class SmallRyeLRAClient implements LRAClient {
             }
 
             SmallRyeLRAInfo lraInfo = response.readEntity(SmallRyeLRAInfo.class);
-            return Optional.of(CompensatorStatus.valueOf(lraInfo.getStatus()));
+            return LRAStatus.valueOf(lraInfo.getStatus());
         } catch (ProcessingException e) {
-            return Optional.empty();
+            return null;
         } finally {
             if (response != null) response.close();
         }
     }
 
-    @Override
-    public Boolean isActiveLRA(URL lraId) throws GenericLRAException {
-        Objects.requireNonNull(lraId);
-        Response response = null;
-
-        try {
-            response = coordinator.isActiveLRA(Utils.extractLraId(lraId));
-
-            return response.getStatus() == Response.Status.OK.getStatusCode();
-        } catch (WebApplicationException e) {
-            return false;
-        } finally {
-            if (response != null) response.close();
-        }
-    }
-
-    private Boolean isCompensatorStatusIn(CompensatorStatus actual, CompensatorStatus... expected) {
-        return Arrays.stream(expected).anyMatch(i -> Objects.equals(i, actual));
-    }
-
-    @Override
-    public Boolean isCompensatedLRA(URL lraId) throws GenericLRAException {
-        return getStatus(lraId).orElseGet(() -> null) == CompensatorStatus.Compensated;
-    }
-
-    @Override
-    public Boolean isCompletedLRA(URL lraId) throws GenericLRAException {
-        return getStatus(lraId).orElseGet(() -> null) == CompensatorStatus.Completed;
-    }
-    
     public URL joinLRA(URL lraId, Long timelimit, URL compensateUrl, URL completeUrl, URL forgetUrl, URL leaveUrl, URL statusUrl, String compensatorData) throws GenericLRAException {
         Objects.requireNonNull(lraId);
         Response response = null;

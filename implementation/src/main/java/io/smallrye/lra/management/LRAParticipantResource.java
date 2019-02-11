@@ -1,8 +1,8 @@
 package io.smallrye.lra.management;
 
 import org.eclipse.microprofile.lra.annotation.Compensate;
-import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
 import org.eclipse.microprofile.lra.annotation.Complete;
+import org.eclipse.microprofile.lra.annotation.ParticipantStatus;
 import org.eclipse.microprofile.lra.annotation.Status;
 import org.eclipse.microprofile.lra.client.LRAClient;
 
@@ -72,7 +72,7 @@ public class LRAParticipantResource {
             @PathParam(PARTICIPANT_ID_PATH_PARAM) String participantId,
             @HeaderParam(LRAClient.LRA_HTTP_HEADER) String lraIdHeader) throws MalformedURLException {
         URL lra = new URL(lraId);
-        CompensatorStatus status = lraManagement.getParticipant(participantId, lra, null).getStatus(lra);
+        ParticipantStatus status = lraManagement.getParticipant(participantId, lra, null).getStatus(lra);
         
         if (status == null) {
             return Response.status(Response.Status.NOT_FOUND).build();

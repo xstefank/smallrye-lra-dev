@@ -1,10 +1,9 @@
 package io.smallrye.lra.model;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
-import org.eclipse.microprofile.lra.annotation.CompensatorStatus;
-import org.eclipse.microprofile.lra.client.LRAInfo;
+import org.eclipse.microprofile.lra.annotation.LRAStatus;
 
-public class SmallRyeLRAInfo implements LRAInfo {
+public class SmallRyeLRAInfo {
 
     private String lraId;
     private long startTime;
@@ -24,14 +23,13 @@ public class SmallRyeLRAInfo implements LRAInfo {
         this.lraId = lraId;
         this.clientId = clientId;
         this.status = status;
-        this.complete = status.equals(CompensatorStatus.Completed.name());
-        this.compensated = status.equals(CompensatorStatus.Compensated.name());
-        this.recovering = status.equals(CompensatorStatus.FailedToComplete.name()) || status.equals(CompensatorStatus.FailedToCompensate.name());
-        this.active = status.equals(CompensatorStatus.Completing.name()) || status.equals(CompensatorStatus.Compensating.name());
+        this.complete = status.equals(LRAStatus.Closed.name());
+        this.compensated = status.equals(LRAStatus.Cancelled.name());
+        this.recovering = status.equals(LRAStatus.FailedToClose.name()) || status.equals(LRAStatus.FailedToCancel.name());
+        this.active = status.equals(LRAStatus.Closing.name()) || status.equals(LRAStatus.Cancelling.name());
         this.topLevel = isTopLevel;
     }
 
-    @Override
     public String getLraId() {
         return lraId;
     }
@@ -44,7 +42,6 @@ public class SmallRyeLRAInfo implements LRAInfo {
         return finishTime;
     }
 
-    @Override
     public String getClientId() {
         return clientId;
     }
@@ -53,27 +50,22 @@ public class SmallRyeLRAInfo implements LRAInfo {
         return status;
     }
 
-    @Override
     public boolean isComplete() {
         return complete;
     }
 
-    @Override
     public boolean isCompensated() {
         return compensated;
     }
 
-    @Override
     public boolean isRecovering() {
         return recovering;
     }
 
-    @Override
     public boolean isActive() {
         return active;
     }
 
-    @Override
     public boolean isTopLevel() {
         return topLevel;
     }
