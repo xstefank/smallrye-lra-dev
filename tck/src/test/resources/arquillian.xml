@@ -3,6 +3,7 @@
 <arquillian>
   <container qualifier="lra-test-container" default="true" mode="suite">
     <configuration>
-    </configuration>
+      <property name="javaVmArguments">-Dthorntail.http.port=8180 <!-- -Dthorntail.logging=TRACE--></property>
+    </configuration>  
   </container>
 </arquillian>

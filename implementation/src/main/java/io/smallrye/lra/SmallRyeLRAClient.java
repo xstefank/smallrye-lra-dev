@@ -3,7 +3,7 @@ package io.smallrye.lra;
 import io.smallrye.lra.api.LRACoordinator;
 import io.smallrye.lra.api.LRARecoveryCoordinator;
 import io.smallrye.lra.model.LRAResource;
-import io.smallrye.lra.model.SmallRyeLRAInfo;
+import io.smallrye.lra.model.SmallRyeLRAInfoJSON;
 import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.lra.annotation.LRAStatus;
@@ -26,6 +26,8 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Objects;
+
+import static io.smallrye.lra.utils.Utils.isInvalidResponse;
 
 @RequestScoped
 public class SmallRyeLRAClient implements LRAClient {
@@ -137,7 +139,7 @@ public class SmallRyeLRAClient implements LRAClient {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to get LRA status", null);
             }
 
-            SmallRyeLRAInfo lraInfo = response.readEntity(SmallRyeLRAInfo.class);
+            SmallRyeLRAInfoJSON lraInfo = response.readEntity(SmallRyeLRAInfoJSON.class);
             return LRAStatus.valueOf(lraInfo.getStatus());
         } catch (ProcessingException e) {
             return null;
@@ -312,9 +314,5 @@ public class SmallRyeLRAClient implements LRAClient {
 
     private boolean hasStatusCodeIn(Response response, Response.Status... statuses) {
         return Arrays.stream(statuses).anyMatch(s -> s.getStatusCode() == response.getStatus());
-    }
-
-    private boolean isInvalidResponse(Response response) {
-        return response.getStatus() != Response.Status.OK.getStatusCode();
     }
 }

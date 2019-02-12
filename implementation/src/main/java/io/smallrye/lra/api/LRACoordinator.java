@@ -18,7 +18,6 @@ import javax.ws.rs.core.Response;
 import static io.smallrye.lra.model.LRAConstants.CLIENT_ID;
 import static io.smallrye.lra.model.LRAConstants.LRA_ID_PATH_PARAM;
 import static io.smallrye.lra.model.LRAConstants.PARENT_LRA;
-import static io.smallrye.lra.model.LRAConstants.STATUS;
 import static io.smallrye.lra.model.LRAConstants.TIMELIMIT;
 
 @Path("/lra-coordinator")
@@ -31,16 +30,6 @@ public interface LRACoordinator {
     Response startLRA(@QueryParam(PARENT_LRA) @DefaultValue("") String parentLRA,
                       @QueryParam(CLIENT_ID) @DefaultValue("") String clientID,
                       @QueryParam(TIMELIMIT) @DefaultValue("0") Long timelimit);
-
-    @GET
-    @Path("/")
-    @Produces(MediaType.APPLICATION_JSON)
-    Response getAllLRAs();
-
-    @GET
-    @Path("/")
-    @Produces(MediaType.APPLICATION_JSON)
-    Response getAllLRAs(@QueryParam(STATUS) String status);
 
     @GET
     @Path("/status/{" + LRA_ID_PATH_PARAM + "}")

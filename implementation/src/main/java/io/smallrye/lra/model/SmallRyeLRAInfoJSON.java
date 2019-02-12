@@ -3,7 +3,7 @@ package io.smallrye.lra.model;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import org.eclipse.microprofile.lra.annotation.LRAStatus;
 
-public class SmallRyeLRAInfo {
+public class SmallRyeLRAInfoJSON {
 
     private String lraId;
     private long startTime;
@@ -16,10 +16,10 @@ public class SmallRyeLRAInfo {
     private boolean active;
     private boolean topLevel;
     
-    public SmallRyeLRAInfo() {
+    public SmallRyeLRAInfoJSON() {
     }
 
-    public SmallRyeLRAInfo(String lraId, String clientId, String status, boolean isTopLevel) {
+    public SmallRyeLRAInfoJSON(String lraId, String clientId, String status, boolean isTopLevel) {
         this.lraId = lraId;
         this.clientId = clientId;
         this.status = status;

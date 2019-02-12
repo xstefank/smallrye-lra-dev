@@ -1,5 +1,6 @@
 package io.smallrye.lra.utils;
 
+import javax.ws.rs.core.Response;
 import java.net.URL;
 import java.time.temporal.ChronoUnit;
 
@@ -12,5 +13,9 @@ public class Utils {
     public static String getFormattedString(URL parentLRA, String clientID, Long timeout, ChronoUnit unit) {
         return String.format("[parentLRA = %s, clientID = %s, timeout = %s, unit = %s]",
                 parentLRA, clientID, timeout, unit);
+    }
+
+    public static boolean isInvalidResponse(Response response) {
+        return response.getStatus() != Response.Status.OK.getStatusCode();
     }
 }
