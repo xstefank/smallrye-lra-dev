@@ -1,4 +1,4 @@
-package io.smallrye.lra.tck;
+package io.smallrye.lra.tck.extension;
 
 import io.smallrye.lra.SmallRyeLRAClient;
 import org.jboss.arquillian.container.test.spi.client.deployment.AuxiliaryArchiveAppender;
