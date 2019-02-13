@@ -3,7 +3,7 @@ package io.smallrye.lra;
 import io.smallrye.lra.api.LRACoordinator;
 import io.smallrye.lra.api.LRARecoveryCoordinator;
 import io.smallrye.lra.model.LRAResource;
-import io.smallrye.lra.model.SmallRyeLRAInfoJSON;
+import io.smallrye.lra.model.SmallRyeLRAJSON;
 import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.lra.annotation.LRAStatus;
@@ -139,7 +139,7 @@ public class SmallRyeLRAClient implements LRAClient {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to get LRA status", null);
             }
 
-            SmallRyeLRAInfoJSON lraInfo = response.readEntity(SmallRyeLRAInfoJSON.class);
+            SmallRyeLRAJSON lraInfo = response.readEntity(SmallRyeLRAJSON.class);
             return LRAStatus.valueOf(lraInfo.getStatus());
         } catch (ProcessingException e) {
             return null;

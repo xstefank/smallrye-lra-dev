@@ -1,6 +1,6 @@
 package io.smallrye.lra.tck;
 
-import io.smallrye.lra.model.SmallRyeLRAInfoJSON;
+import io.smallrye.lra.model.SmallRyeLRAJSON;
 import io.smallrye.lra.tck.api.ManagementAPI;
 import io.smallrye.lra.tck.model.SmallRyeLRAInfo;
 import io.smallrye.lra.utils.Utils;
@@ -20,9 +20,9 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static io.smallrye.lra.utils.Utils.isInvalidResponse;
 
@@ -54,7 +54,8 @@ public class SmallRyeManagementSPI implements ManagementSPI {
                 throw new GenericLRAException(lraId, response.getStatus(), "Unable to get LRA", null);
             }
 
-            return (LRAInfo) response.readEntity(SmallRyeLRAInfoJSON.class);
+            SmallRyeLRAJSON json = response.readEntity(SmallRyeLRAJSON.class);
+            return SmallRyeLRAInfo.of(json);
         } catch (ProcessingException e) {
             return null;
         } finally {
@@ -68,15 +69,15 @@ public class SmallRyeManagementSPI implements ManagementSPI {
         Response response = null;
 
         try {
-            response = status == null ? management.getAllLRAs() : management.getAllLRAs(status.name());
+            response = status == null || status == LRAStatus.Active ? management.getAllLRAs() : management.getAllLRAs(status.name());
 
             if (isInvalidResponse(response)) {
                 throw new GenericLRAException(null, response.getStatus(),
                         String.format("Unable to get %s LRAs", status == null ? "all" : status), null);
             }
 
-            List<SmallRyeLRAInfo> smallRyeLRAInfos = response.readEntity(new GenericType<List<SmallRyeLRAInfo>>() {});
-            return new ArrayList<>(smallRyeLRAInfos);
+            List<SmallRyeLRAJSON> smallRyeLRAJSONS = response.readEntity(new GenericType<List<SmallRyeLRAJSON>>() {});
+            return smallRyeLRAJSONS.stream().map(SmallRyeLRAInfo::of).collect(Collectors.toList());
         } catch (ProcessingException e) {
             throw new GenericLRAException(null, response != null ? response.getStatus() : -1,
                     String.format("Invalid content received for %s LRAs", status == null ? "all" : status), e);
