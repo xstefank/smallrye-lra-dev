@@ -16,6 +16,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 import java.net.MalformedURLException;
@@ -56,6 +57,8 @@ public class SmallRyeManagementSPI implements ManagementSPI {
 
             SmallRyeLRAJSON json = response.readEntity(SmallRyeLRAJSON.class);
             return SmallRyeLRAInfo.of(json);
+        } catch (WebApplicationException t) {
+            throw new NotFoundException("Unable to find LRA: " + lraId);
         } catch (ProcessingException e) {
             return null;
         } finally {
