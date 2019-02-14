@@ -261,7 +261,7 @@ public class SmallRyeLRAClient implements LRAClient {
             URL lraId = new URL(URLDecoder.decode(recoveryUrl.toExternalForm().replaceFirst(".*/([^/?]+)/([^/?]+).*", "$1"), "UTF-8"));
             
             // TODO hardcoded link header because of the TCK, remove when coodrinator catches up
-            response = coordinator.leaveLRA(Utils.extractLraId(lraId), "<http://localhost:8180/activities/compensate>; rel=\"compensate\"; title=\"compensateURI\"; type=\"text/plain\",<http://localhost:8180/activities/complete>; rel=\"complete\"; title=\"completeURI\"; type=\"text/plain\",<http://localhost:8180/activities/forget>; rel=\"forget\"; title=\"forgetURI\"; type=\"text/plain\",<http://localhost:8180/activities/leave>; rel=\"leave\"; title=\"leaveURI\"; type=\"text/plain\",<http://localhost:8180/activities/status>; rel=\"status\"; title=\"statusURI\"; type=\"text/plain\"");
+            response = coordinator.leaveLRA(Utils.extractLraId(lraId), "<http://localhost:8180/lracontroller/compensate>; rel=\"compensate\"; title=\"compensateURI\"; type=\"text/plain\",<http://localhost:8180/lracontroller/complete>; rel=\"complete\"; title=\"completeURI\"; type=\"text/plain\",<http://localhost:8180/lracontroller/forget>; rel=\"forget\"; title=\"forgetURI\"; type=\"text/plain\",<http://localhost:8180/lracontroller/leave>; rel=\"leave\"; title=\"leaveURI\"; type=\"text/plain\",<http://localhost:8180/lracontroller/status>; rel=\"status\"; title=\"statusURI\"; type=\"text/plain\"");
 
             if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
                 throw new NotFoundException("Unable to leave LRA: " + lraId);
