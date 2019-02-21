@@ -1,6 +1,7 @@
 package io.smallrye.lra.tck.model;
 
 import io.smallrye.lra.model.SmallRyeLRAJSON;
+import io.smallrye.lra.utils.Utils;
 import org.eclipse.microprofile.lra.annotation.LRAStatus;
 import org.eclipse.microprofile.lra.tck.LRAInfo;
 
@@ -20,7 +21,7 @@ public class SmallRyeLRAInfo implements LRAInfo {
 
     public static SmallRyeLRAInfo of(SmallRyeLRAJSON json) {
         return new SmallRyeLRAInfo(json.getLraId(), json.getClientId(),
-                mapLRAStatus(json.getStatus()), json.isTopLevel());
+                Utils.mapLRAStatus(json.getStatus()), json.isTopLevel());
     }
 
     @Override
@@ -56,23 +57,5 @@ public class SmallRyeLRAInfo implements LRAInfo {
     @Override
     public boolean isTopLevel() {
         return topLevel;
-    }
-
-    private static LRAStatus mapLRAStatus(String status) {
-        if (status.equals("Compensating")) {
-            return LRAStatus.Cancelling;
-        } else if (status.equals("Compensated")) {
-            return LRAStatus.Cancelled;
-        } else if (status.equals("FailedToCompensate")) {
-            return LRAStatus.FailedToCancel;
-        } else if (status.equals("Completing")) {
-            return LRAStatus.Closing;
-        } else if (status.equals("Completed")) {
-            return LRAStatus.Closed;
-        } else if (status.equals("FailedToComplete")) {
-            return LRAStatus.FailedToClose;
-        } else {
-            return LRAStatus.Active;
-        }
     }
 }

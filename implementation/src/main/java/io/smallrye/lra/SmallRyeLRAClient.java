@@ -140,9 +140,11 @@ public class SmallRyeLRAClient implements LRAClient {
             }
 
             SmallRyeLRAJSON lraInfo = response.readEntity(SmallRyeLRAJSON.class);
-            return LRAStatus.valueOf(lraInfo.getStatus());
+            return Utils.mapLRAStatus(lraInfo.getStatus());
         } catch (ProcessingException e) {
             return null;
+        } catch (WebApplicationException e) {
+            throw new NotFoundException("Unable to get status for LRA: " + lraId);
         } finally {
             if (response != null) response.close();
         }
