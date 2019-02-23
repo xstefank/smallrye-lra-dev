@@ -4,6 +4,7 @@ import io.smallrye.lra.SmallRyeLRAClient;
 import org.jboss.arquillian.container.test.spi.client.deployment.AuxiliaryArchiveAppender;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 
@@ -18,7 +19,9 @@ public class SmallRyeLRAAuxiliaryArchiveAppender implements AuxiliaryArchiveAppe
                 .addPackage("org.eclipse.microprofile.lra.client")
                 .addPackage("org.eclipse.microprofile.lra.participant")
                 .addPackages(true, SmallRyeLRAClient.class.getPackage())
-                .addAsManifestResource(new StringAsset("io.smallrye.lra.filter.LRAClientRequestFilter"), "services/javax.ws.rs.ext.Providers");
+                .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml")
+                .addAsManifestResource(new StringAsset("io.smallrye.lra.filter.LRAClientRequestFilter"), "services/javax.ws.rs.ext.Providers")
+                .addAsManifestResource(new StringAsset("io.smallrye.lra.participant.LRACDIExtension"), "services/javax.enterprise.inject.spi.Extension");
 
         File configFile = new File(ClassLoader.getSystemResource("META-INF/microprofile-config.properties").getFile());
         lraJar.addAsManifestResource(configFile, "microprofile-config.properties");
